@@ -1,0 +1,29 @@
+[package]
+name = "genxlink-signaling-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "genxlink-signaling"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true }
+axum = { workspace = true, features = ["ws"] }
+tower = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# WebSocket
+tokio-tungstenite = "0.21"
+futures-util = "0.3"
+
+# GenXLink dependencies
+genxlink-protocol = { path = "../../shared/protocol" }

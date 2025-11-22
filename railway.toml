@@ -1,0 +1,17 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "cargo build --release --package genxlink-server"
+
+[deploy]
+startCommand = "target/release/genxlink-server"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "genxlink-server"
+port = 8080
+
+[services.healthcheck]
+path = "/health"
+interval = 30
+timeout = 10

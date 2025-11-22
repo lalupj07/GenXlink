@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: GenXLink API
+  description: |
+    GenXLink Signaling Server API for remote desktop connections.
+    
+    ## Features
+    - Device registration and discovery
+    - WebRTC signaling
+    - Session management
+    - Real-time WebSocket communication
+    
+    ## Authentication
+    Coming soon: JWT-based authentication
+    
+  version: 0.1.0
+  contact:
+    name: GenXis Innovations
+    email: support@genxis.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://genxlink-server.up.railway.app
+    description: Production (Railway)
+  - url: https://genxlink-server.fly.dev
+    description: Production (Fly.io)
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Health
+    description: Server health and status
+  - name: Devices
+    description: Device management
+  - name: WebSocket
+    description: Real-time communication
+
+paths:
+  /:
+    get:
+      summary: Server information
+      description: Returns HTML page with server information and documentation
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server info page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /health:
+    get:
+      summary: Health check
+      description: Check if the server is healthy and running
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                    example: 0.1.0
+                  service:
+                    type: string
+                    example: genxlink-signaling-server
+                  uptime:
+                    type: integer
+                    description: Server uptime in seconds
+                    example: 3600
+
+  /devices:
+    get:
+      summary: List devices
+      description: Get list of all registered devices
+      tags:
+        - Devices
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+
+  /ws:
+    get:
+      summary: WebSocket endpoint
+      description: |
+        WebSocket endpoint for real-time communication.
+        
+        ## Message Types
+        - `register` - Register a device
+        - `connect` - Request connection to another device
+        - `offer` - WebRTC offer
+        - `answer` - WebRTC answer
+        - `ice_candidate` - ICE candidate
+        - `ping` - Keep-alive ping
+        
+      tags:
+        - WebSocket
+      responses:
+        '101':
+          description: Switching Protocols - WebSocket connection established
+
+components:
+  schemas:
+    Device:
+      type: object
+      properties:
+        device_id:
+          type: string
+          description: Unique device identifier
+          example: abc-123-xyz
+        device_name:
+          type: string
+          description: Human-readable device name
+          example: My Desktop PC
+        connected_at:
+          type: string
+          format: date-time
+          description: When the device connected
+          example: 2025-11-23T00:00:00Z
+        last_seen:
+          type: string
+          format: date-time
+          description: Last activity timestamp
+          example: 2025-11-23T00:05:00Z
+        is_online:
+          type: boolean
+          description: Whether device is currently online
+          example: true
+    
+    RegisterMessage:
+      type: object
+      required:
+        - type
+        - device_id
+        - device_name
+      properties:
+        type:
+          type: string
+          enum: [register]
+        device_id:
+          type: string
+          example: abc-123-xyz
+        device_name:
+          type: string
+          example: My Desktop PC
+    
+    ConnectMessage:
+      type: object
+      required:
+        - type
+        - target_device_id
+      properties:
+        type:
+          type: string
+          enum: [connect]
+        target_device_id:
+          type: string
+          example: xyz-789-abc
+    
+    PingMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [ping]
+    
+    PongMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [pong]
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-11-23T00:00:00Z
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication (coming soon)

@@ -1,0 +1,60 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Build artifacts
+dist/
+build/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+*.key
+*.pem
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Android
+*.apk
+*.aab
+*.dex
+.gradle/
+local.properties
+.cxx/
+*.iml
+
+# Node (for Tauri)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# License keys (security)
+licenses/
+keys/private/

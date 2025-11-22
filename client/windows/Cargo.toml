@@ -1,0 +1,34 @@
+[package]
+name = "genxlink-windows"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "genxlink"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+config = { workspace = true }
+dotenv = { workspace = true }
+
+# GenXLink dependencies
+genxlink-client-core = { path = "../core" }
+genxlink-protocol = { path = "../../shared/protocol" }
+genxlink-crypto = { path = "../../shared/crypto" }
+genxlink-licensing = { path = "../../shared/licensing" }
+
+# UI
+eframe = { workspace = true }
+egui = { workspace = true }
+egui_extras = { workspace = true }
+image = { workspace = true }
+chrono = { workspace = true }
+dirs = "5.0"
