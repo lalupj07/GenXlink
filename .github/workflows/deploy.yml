@@ -1,4 +1,4 @@
-name: Deploy to Railway/Fly.io
+name: GenXLink CI/CD
 
 on:
   push:
