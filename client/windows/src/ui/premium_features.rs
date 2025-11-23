@@ -6,6 +6,36 @@ pub struct PremiumFeaturesPanel {
     show_details: bool,
     show_annual: bool,
     selected_tier: PricingTier,
+    selected_theme: AppTheme,
+    selected_language: AppLanguage,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AppTheme {
+    Light,
+    Dark,
+    System,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AppLanguage {
+    English,
+    Hindi,
+    Tamil,
+    Telugu,
+    Bengali,
+}
+
+impl Default for AppTheme {
+    fn default() -> Self {
+        Self::System
+    }
+}
+
+impl Default for AppLanguage {
+    fn default() -> Self {
+        Self::English
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,6 +57,8 @@ impl PremiumFeaturesPanel {
             show_details: false,
             show_annual: true,
             selected_tier: PricingTier::Free,
+            selected_theme: AppTheme::System,
+            selected_language: AppLanguage::English,
         }
     }
 
@@ -155,6 +187,48 @@ impl PremiumFeaturesPanel {
                     false,
                     &mut action,
                 );
+            });
+
+            ui.add_space(20.0);
+            ui.separator();
+            ui.add_space(15.0);
+
+            // Theme & Language Settings
+            ui.heading("🎨 Appearance & Language");
+            ui.add_space(10.0);
+            
+            ui.horizontal(|ui| {
+                ui.label("🎨 Theme:");
+                ui.add_space(10.0);
+                
+                egui::ComboBox::from_label("")
+                    .selected_text(format!("{:?}", self.selected_theme))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.selected_theme, AppTheme::Light, "☀️ Light");
+                        ui.selectable_value(&mut self.selected_theme, AppTheme::Dark, "🌙 Dark");
+                        ui.selectable_value(&mut self.selected_theme, AppTheme::System, "💻 System");
+                    });
+                
+                ui.add_space(20.0);
+                
+                ui.label("🌍 Language:");
+                ui.add_space(10.0);
+                
+                egui::ComboBox::from_label("")
+                    .selected_text(format!("{:?}", self.selected_language))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::English, "🇬🇧 English");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Hindi, "🇮🇳 हिंदी");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Tamil, "🇮🇳 தமிழ்");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Telugu, "🇮🇳 తెలుగు");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Bengali, "🇮🇳 বাংলা");
+                    });
+            });
+            
+            ui.add_space(10.0);
+            ui.horizontal(|ui| {
+                ui.colored_label(egui::Color32::from_rgb(150, 150, 150), 
+                    "💡 Theme changes apply immediately • Language support coming soon");
             });
 
             ui.add_space(20.0);
@@ -314,49 +388,55 @@ impl PremiumFeaturesPanel {
     }
 
     fn show_comparison_table(&self, ui: &mut egui::Ui) {
-        use egui_extras::{TableBuilder, Column};
-        
-        // Simple table without egui_extras for now
         ui.group(|ui| {
-            // Header
+            // Header with better alignment
             ui.horizontal(|ui| {
-                ui.label("Feature");
-                ui.add_space(100.0);
-                ui.label("Free");
-                ui.add_space(50.0);
-                ui.label("Solo");
-                ui.add_space(50.0);
-                ui.label("Team");
+                // Feature column
+                ui.add_space(5.0);
+                ui.label(egui::RichText::new("Feature").strong().size(14.0));
+                ui.add_space(120.0);
+                
+                // Plan columns with centered alignment
+                ui.add_space(20.0);
+                ui.label(egui::RichText::new("🟢 Free").strong().size(14.0).color(egui::Color32::from_rgb(100, 200, 100)));
+                ui.add_space(40.0);
+                ui.label(egui::RichText::new("🔵 Solo").strong().size(14.0).color(egui::Color32::from_rgb(100, 150, 255)));
+                ui.add_space(40.0);
+                ui.label(egui::RichText::new("🟣 Team").strong().size(14.0).color(egui::Color32::from_rgb(200, 100, 255)));
             });
             
             ui.separator();
             
-            // Rows
+            // Features with better spacing and alignment
             let features = [
-                ("Price/month", "₹0", "₹840", "₹1,260"),
-                ("Annual price", "₹0", "₹670/mo", "₹1,090/mo"),
-                ("GPU Acceleration", "✔", "✔", "✔"),
-                ("Ultra-Low Latency", "✔", "✔", "✔"),
-                ("Adaptive Bitrate", "✔", "✔", "✔"),
-                ("Audio Streaming", "—", "✔", "✔"),
-                ("AI Features", "—", "✔", "✔"),
-                ("Recording", "—", "✔", "✔"),
-                ("Unattended Access", "—", "✔", "✔"),
-                ("Multi-user Sessions", "—", "✔", "✔"),
-                ("Team Dashboard", "—", "—", "✔"),
-                ("Role-based Access", "—", "—", "✔"),
-                ("Device Logins", "1", "5", "10"),
-                ("Concurrent Sessions", "0", "2", "5"),
+                ("💰 Price/month", "₹0", "₹840", "₹1,260"),
+                ("💎 Annual price", "₹0", "₹670/mo", "₹1,090/mo"),
+                ("🚀 GPU Acceleration", "✅", "✅", "✅"),
+                ("⚡ Ultra-Low Latency", "✅", "✅", "✅"),
+                ("📊 Adaptive Bitrate", "✅", "✅", "✅"),
+                ("🎵 Audio Streaming", "❌", "✅", "✅"),
+                ("🤖 AI Features", "❌", "✅", "✅"),
+                ("📹 Recording", "❌", "✅", "✅"),
+                ("🔓 Unattended Access", "❌", "✅", "✅"),
+                ("👥 Multi-user Sessions", "❌", "✅", "✅"),
+                ("📊 Team Dashboard", "❌", "❌", "✅"),
+                ("🔐 Role-based Access", "❌", "❌", "✅"),
+                ("📱 Device Logins", "1", "5", "10"),
+                ("🔄 Concurrent Sessions", "0", "2", "5"),
             ];
             
             for (feature, free, solo, team) in features {
                 ui.horizontal(|ui| {
+                    ui.add_space(5.0);
                     ui.label(feature);
-                    ui.add_space(50.0);
+                    ui.add_space(80.0);
+                    
+                    // Center the plan values
+                    ui.add_space(15.0);
                     ui.label(free);
-                    ui.add_space(50.0);
+                    ui.add_space(45.0);
                     ui.label(solo);
-                    ui.add_space(50.0);
+                    ui.add_space(45.0);
                     ui.label(team);
                 });
             }
