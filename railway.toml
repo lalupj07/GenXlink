@@ -1,9 +1,7 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "cargo build --release --package genxlink-server"
+builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "target/release/genxlink-server"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
