@@ -23,8 +23,8 @@ RUN apt-get update && apt-get install -y \
     libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy binary from builder
-COPY --from=builder /app/target/release/genxlink-server /usr/local/bin/
+# Copy binary from builder (Cargo replaces hyphens with underscores in binary names)
+COPY --from=builder /app/target/release/genxlink-server /usr/local/bin/genxlink-server
 
 # Create non-root user
 RUN useradd -m -u 1000 genxlink && \
