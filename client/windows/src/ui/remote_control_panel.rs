@@ -1,12 +1,36 @@
 use eframe::egui;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use genxlink_client_core::remote_control_manager::RemoteControlManager;
+use genxlink_protocol::{DeviceId, RemoteControlState};
 
 /// Remote control panel state
-#[derive(Default)]
 pub struct RemoteControlPanel {
     enabled: bool,
     permission_level: PermissionLevel,
     event_count: u64,
     show_settings: bool,
+    
+    // Remote control manager
+    manager: Arc<Mutex<Option<RemoteControlManager>>>,
+    remote_device_id: String,
+    current_state: RemoteControlState,
+    auto_accept: bool,
+}
+
+impl Default for RemoteControlPanel {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            permission_level: PermissionLevel::default(),
+            event_count: 0,
+            show_settings: false,
+            manager: Arc::new(Mutex::new(None)),
+            remote_device_id: String::new(),
+            current_state: RemoteControlState::Idle,
+            auto_accept: false,
+        }
+    }
 }
 
 /// Permission level for remote control
@@ -71,6 +95,59 @@ impl RemoteControlPanel {
     /// Get permission level
     pub fn permission_level(&self) -> PermissionLevel {
         self.permission_level
+    }
+    
+    /// Initialize remote control manager
+    pub fn initialize(&mut self, device_id: DeviceId) {
+        let manager = RemoteControlManager::new(device_id);
+        let manager_arc = Arc::new(Mutex::new(Some(manager)));
+        self.manager = manager_arc;
+        tracing::info!("Remote control manager initialized");
+    }
+    
+    /// Request control of remote device
+    pub fn request_control(&mut self) {
+        if self.remote_device_id.is_empty() {
+            tracing::warn!("No remote device ID specified");
+            return;
+        }
+        
+        let manager = self.manager.clone();
+        let remote_id = DeviceId(self.remote_device_id.clone());
+        
+        tokio::spawn(async move {
+            let mut guard = manager.lock().await;
+            if let Some(mgr) = guard.as_mut() {
+                match mgr.request_control(remote_id).await {
+                    Ok(response) => {
+                        if response.granted {
+                            tracing::info!("Remote control granted!");
+                        } else {
+                            tracing::warn!("Remote control denied: {:?}", response.reason);
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to request control: {}", e);
+                    }
+                }
+            }
+        });
+    }
+    
+    /// End remote control session
+    pub fn end_session(&mut self) {
+        let manager = self.manager.clone();
+        
+        tokio::spawn(async move {
+            let mut guard = manager.lock().await;
+            if let Some(mgr) = guard.as_mut() {
+                if let Err(e) = mgr.end_session().await {
+                    tracing::error!("Failed to end session: {}", e);
+                }
+            }
+        });
+        
+        self.current_state = RemoteControlState::Ended;
     }
 
     /// Render the remote control panel
