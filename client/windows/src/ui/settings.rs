@@ -248,12 +248,13 @@ impl SettingsPanel {
                                 if ui.add(
                                     egui::Button::new(
                                         egui::RichText::new("📄 License")
-                                            .color(egui::Color32::WHITE)
+                                            .color(egui::Color32::from_rgb(37, 99, 235))
                                             .size(13.0)
                                             .strong()
                                     )
-                                        .fill(egui::Color32::from_rgb(37, 99, 235))
-                                        .rounding(egui::Rounding::same(8.0))
+                                        .fill(egui::Color32::TRANSPARENT)
+                                        .stroke(egui::Stroke::new(1.5, egui::Color32::from_rgb(37, 99, 235)))
+                                        .rounding(egui::Rounding::same(6.0))
                                         .min_size(egui::vec2(80.0, 32.0))
                                 ).clicked() {
                                     action = SettingsAction::ViewLicense;
@@ -264,12 +265,13 @@ impl SettingsPanel {
                                 if ui.add(
                                     egui::Button::new(
                                         egui::RichText::new("📚 Documentation")
-                                            .color(egui::Color32::WHITE)
+                                            .color(egui::Color32::from_rgb(22, 163, 74))
                                             .size(13.0)
                                             .strong()
                                     )
-                                        .fill(egui::Color32::from_rgb(22, 163, 74))
-                                        .rounding(egui::Rounding::same(8.0))
+                                        .fill(egui::Color32::TRANSPARENT)
+                                        .stroke(egui::Stroke::new(1.5, egui::Color32::from_rgb(22, 163, 74)))
+                                        .rounding(egui::Rounding::same(6.0))
                                         .min_size(egui::vec2(100.0, 32.0))
                                 ).clicked() {
                                     action = SettingsAction::OpenDocumentation;
@@ -280,12 +282,13 @@ impl SettingsPanel {
                                 let _ = ui.add(
                                     egui::Button::new(
                                         egui::RichText::new("🔗 GitHub")
-                                            .color(egui::Color32::WHITE)
+                                            .color(egui::Color32::from_rgb(109, 40, 217))
                                             .size(13.0)
                                             .strong()
                                     )
-                                        .fill(egui::Color32::from_rgb(109, 40, 217))
-                                        .rounding(egui::Rounding::same(8.0))
+                                        .fill(egui::Color32::TRANSPARENT)
+                                        .stroke(egui::Stroke::new(1.5, egui::Color32::from_rgb(109, 40, 217)))
+                                        .rounding(egui::Rounding::same(6.0))
                                         .min_size(egui::vec2(70.0, 32.0))
                                 );
                             });
