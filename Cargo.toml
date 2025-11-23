@@ -10,6 +10,8 @@ members = [
     "shared/crypto",
     "shared/licensing",
 ]
+# Exclude client for Docker builds (Railway)
+exclude = []
 resolver = "2"
 
 [workspace.package]
