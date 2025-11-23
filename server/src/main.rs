@@ -1,8 +1,7 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest, HttpMessage};
 use actix_ws::Message;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
