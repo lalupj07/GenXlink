@@ -80,7 +80,14 @@ impl Database {
             .await?;
 
         let body = response.text().await?;
-        let devices: Vec<Device> = serde_json::from_str(&body)?;
+        
+        // Handle empty response or parse as array
+        if body.is_empty() || body == "{}" {
+            return Ok(Vec::new());
+        }
+        
+        let devices: Vec<Device> = serde_json::from_str(&body)
+            .unwrap_or_else(|_| Vec::new());
         
         Ok(devices)
     }
@@ -94,7 +101,14 @@ impl Database {
             .await?;
 
         let body = response.text().await?;
-        let devices: Vec<Device> = serde_json::from_str(&body)?;
+        
+        // Handle empty response or parse as array
+        if body.is_empty() || body == "{}" {
+            return Ok(Vec::new());
+        }
+        
+        let devices: Vec<Device> = serde_json::from_str(&body)
+            .unwrap_or_else(|_| Vec::new());
         
         Ok(devices)
     }
