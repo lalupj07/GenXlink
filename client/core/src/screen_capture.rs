@@ -4,18 +4,17 @@ use tokio::sync::Mutex;
 
 #[cfg(target_os = "windows")]
 use windows::{
+    core::ComInterface,
     Win32::Graphics::Dxgi::{
-        IDXGIFactory1, IDXGIAdapter1, IDXGIOutput, IDXGIOutputDuplication,
-        DXGI_OUTPUT_DESC, DXGI_OUTDUPL_FRAME_INFO,
+        IDXGIFactory1, IDXGIOutputDuplication, DXGI_OUTPUT_DESC,
+        DXGI_OUTDUPL_FRAME_INFO,
         CreateDXGIFactory1, DXGI_ERROR_ACCESS_LOST, DXGI_ERROR_WAIT_TIMEOUT,
     },
     Win32::Graphics::Direct3D11::{
         ID3D11Device, ID3D11DeviceContext, ID3D11Texture2D,
-        D3D11CreateDevice, D3D11_SDK_VERSION,
-        D3D11_CREATE_DEVICE_FLAG, D3D11_DRIVER_TYPE_HARDWARE,
+        D3D11CreateDevice, D3D11_SDK_VERSION, D3D11_CREATE_DEVICE_FLAG,
     },
     Win32::Graphics::Direct3D::D3D_FEATURE_LEVEL_11_0,
-    core::GUID,
 };
 
 /// Screen capture frame
@@ -93,7 +92,7 @@ impl ScreenCapturer {
             
             D3D11CreateDevice(
                 None,
-                D3D11_DRIVER_TYPE_HARDWARE,
+                windows::Win32::Graphics::Direct3D::D3D_DRIVER_TYPE(1), // D3D_DRIVER_TYPE_HARDWARE = 1
                 None,
                 D3D11_CREATE_DEVICE_FLAG(0),
                 Some(&[D3D_FEATURE_LEVEL_11_0]),
@@ -130,7 +129,7 @@ impl ScreenCapturer {
     }
     
     /// Start capturing
-    pub async fn start_capture<F>(&self, mut callback: F) -> Result<()>
+    pub async fn start_capture<F>(&self, callback: F) -> Result<()>
     where
         F: FnMut(CaptureFrame) -> Result<()> + Send + 'static,
     {
@@ -238,12 +237,16 @@ impl ScreenCapturer {
             // Create staging texture for CPU access
             let mut staging_desc = desc.clone();
             staging_desc.Usage = windows::Win32::Graphics::Direct3D11::D3D11_USAGE_STAGING;
-            staging_desc.BindFlags = windows::Win32::Graphics::Direct3D11::D3D11_BIND_FLAG(0);
-            staging_desc.CPUAccessFlags = windows::Win32::Graphics::Direct3D11::D3D11_CPU_ACCESS_READ;
-            staging_desc.MiscFlags = windows::Win32::Graphics::Direct3D11::D3D11_RESOURCE_MISC_FLAG(0);
+            staging_desc.BindFlags = 0;
+            staging_desc.CPUAccessFlags = windows::Win32::Graphics::Direct3D11::D3D11_CPU_ACCESS_READ.0 as u32;
+            staging_desc.MiscFlags = 0;
             
-            let staging_texture = device.CreateTexture2D(&staging_desc, None)
-                .context("Failed to create staging texture")?;
+            let staging_texture: ID3D11Texture2D = {
+                let mut texture: Option<ID3D11Texture2D> = None;
+                device.CreateTexture2D(&staging_desc, None, Some(&mut texture))
+                    .context("Failed to create staging texture")?;
+                texture.expect("CreateTexture2D returned None")
+            };
             
             // Copy texture to staging
             context.CopyResource(&staging_texture, &texture);
