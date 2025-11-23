@@ -25,6 +25,7 @@ pub mod performance;
 pub mod performance_optimizer;
 pub mod webrtc;
 pub mod signaling_client;
+pub mod screen_capture;
 
 pub use capture::*;
 pub use encoder::*;
