@@ -2652,6 +2652,7 @@ dependencies = [
  "genxlink-crypto",
  "genxlink-licensing",
  "genxlink-protocol",
+ "image",
  "mp4",
  "openh264",
  "rand 0.8.5",

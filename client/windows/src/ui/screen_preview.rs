@@ -291,7 +291,7 @@ impl ScreenPreviewPanel {
         std::fs::create_dir_all(&captures_dir).ok();
         
         let timestamp = Local::now().format("%Y-%m-%d_%H-%M-%S");
-        let filename = format!("recording_{}.raw", timestamp);
+        let filename = format!("recording_{}.avi", timestamp);
         let filepath = captures_dir.join(filename);
         
         // Create encoder config
