@@ -1,0 +1,8 @@
+{
+  "ignorePatterns": [
+    "secrets.*"
+  ],
+  "suppressWarnings": [
+    "Context access might be invalid"
+  ]
+}

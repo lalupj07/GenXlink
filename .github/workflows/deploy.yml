@@ -69,6 +69,8 @@ jobs:
       - name: Check Railway Token
         id: check-railway
         run: |
+          # Note: secrets.RAILWAY_TOKEN is a valid GitHub Actions context
+          # IDE warnings about this are false positives
           if [ -z "${{ secrets.RAILWAY_TOKEN }}" ]; then
             echo "Railway token not configured, skipping deployment"
             echo "skip=true" >> $GITHUB_OUTPUT
@@ -103,6 +105,8 @@ jobs:
       - name: Check Fly Token
         id: check-fly
         run: |
+          # Note: secrets.FLY_API_TOKEN is a valid GitHub Actions context
+          # IDE warnings about this are false positives
           if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
             echo "Fly.io token not configured, skipping deployment"
             echo "skip=true" >> $GITHUB_OUTPUT
