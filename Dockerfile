@@ -3,13 +3,13 @@ FROM rust:1.75 as builder
 
 WORKDIR /app
 
-# Copy manifests
-COPY Cargo.toml Cargo.lock ./
+# Copy server and shared directories
 COPY server ./server
 COPY shared ./shared
 
-# Build release binary
-RUN cargo build --release --package genxlink-server
+# Build directly in server directory (no workspace)
+WORKDIR /app/server
+RUN cargo build --release
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binary from builder
-COPY --from=builder /app/target/release/genxlink-server /usr/local/bin/
+COPY --from=builder /app/server/target/release/genxlink-server /usr/local/bin/
 
 # Create non-root user
 RUN useradd -m -u 1000 genxlink && \
