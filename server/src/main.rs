@@ -8,6 +8,7 @@ use uuid::Uuid;
 mod signaling;
 mod device;
 mod database;
+mod auth;
 
 use signaling::SignalingServer;
 use database::Database;
@@ -49,6 +50,8 @@ async fn main() -> std::io::Result<()> {
             .route("/health", web::get().to(health))
             .route("/ws", web::get().to(websocket))
             .route("/devices", web::get().to(list_devices))
+            .route("/auth/register", web::post().to(register))
+            .route("/auth/login", web::post().to(login))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
@@ -225,4 +228,127 @@ async fn handle_message(
             None
         }
     }
+}
+
+// ============================================================================
+// Authentication Endpoints
+// ============================================================================
+
+#[derive(Deserialize)]
+struct RegisterRequest {
+    email: String,
+    password: String,
+    full_name: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct LoginRequest {
+    email: String,
+    password: String,
+}
+
+#[derive(Serialize)]
+struct AuthResponse {
+    token: String,
+    user: UserInfo,
+}
+
+#[derive(Serialize)]
+struct UserInfo {
+    id: String,
+    email: String,
+    full_name: Option<String>,
+}
+
+async fn register(
+    req: web::Json<RegisterRequest>,
+    db: web::Data<Arc<Database>>,
+) -> impl Responder {
+    // Validate email format
+    if !req.email.contains('@') {
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "Invalid email format"
+        }));
+    }
+
+    // Validate password length
+    if req.password.len() < 8 {
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "Password must be at least 8 characters"
+        }));
+    }
+
+    // Hash password
+    let password_hash = match auth::hash_password(&req.password) {
+        Ok(hash) => hash,
+        Err(e) => {
+            tracing::error!("Failed to hash password: {}", e);
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to process password"
+            }));
+        }
+    };
+
+    // For now, generate a user ID (in production, this would be from database)
+    let user_id = Uuid::new_v4().to_string();
+
+    // Generate JWT token
+    let token = match auth::generate_token(user_id.clone(), req.email.clone()) {
+        Ok(token) => token,
+        Err(e) => {
+            tracing::error!("Failed to generate token: {}", e);
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to generate authentication token"
+            }));
+        }
+    };
+
+    tracing::info!("✅ User registered: {}", req.email);
+
+    HttpResponse::Ok().json(AuthResponse {
+        token,
+        user: UserInfo {
+            id: user_id,
+            email: req.email.clone(),
+            full_name: req.full_name.clone(),
+        },
+    })
+}
+
+async fn login(
+    req: web::Json<LoginRequest>,
+    db: web::Data<Arc<Database>>,
+) -> impl Responder {
+    // For demo purposes, accept any login with password length >= 8
+    // In production, verify against database
+    if req.password.len() < 8 {
+        return HttpResponse::Unauthorized().json(serde_json::json!({
+            "error": "Invalid credentials"
+        }));
+    }
+
+    // Generate user ID (in production, fetch from database)
+    let user_id = Uuid::new_v4().to_string();
+
+    // Generate JWT token
+    let token = match auth::generate_token(user_id.clone(), req.email.clone()) {
+        Ok(token) => token,
+        Err(e) => {
+            tracing::error!("Failed to generate token: {}", e);
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to generate authentication token"
+            }));
+        }
+    };
+
+    tracing::info!("✅ User logged in: {}", req.email);
+
+    HttpResponse::Ok().json(AuthResponse {
+        token,
+        user: UserInfo {
+            id: user_id,
+            email: req.email.clone(),
+            full_name: None,
+        },
+    })
 }
