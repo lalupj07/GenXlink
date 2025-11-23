@@ -133,6 +133,11 @@ impl SignalingClient {
         }
     }
 
+    /// Send a signaling message (alias for send)
+    pub async fn send_message(&self, message: SignalingMessage) -> Result<(), ClientError> {
+        self.send(message).await
+    }
+
     /// Get current connection state
     pub async fn get_state(&self) -> SignalingState {
         self.state.read().await.clone()
