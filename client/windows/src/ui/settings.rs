@@ -241,24 +241,22 @@ impl SettingsPanel {
                         ui.label("🇮🇳 Created in India");
                         ui.label("📧 genxisinnovation@outlook.com");
                         
-                        ui.add_space(6.0);
+                        ui.add_space(4.0);
                         
-                        ui.vertical_centered(|ui| {
-                            ui.horizontal(|ui| {
-                                if ui.button("📄 License").clicked() {
-                                    action = SettingsAction::ViewLicense;
-                                }
-                                
-                                ui.add_space(6.0);
-                                
-                                if ui.button("📚 Documentation").clicked() {
-                                    action = SettingsAction::OpenDocumentation;
-                                }
-                                
-                                ui.add_space(6.0);
-                                
-                                let _ = ui.button("🔗 GitHub");
-                            });
+                        ui.horizontal(|ui| {
+                            if ui.button("📄 License").clicked() {
+                                action = SettingsAction::ViewLicense;
+                            }
+                            
+                            ui.add_space(6.0);
+                            
+                            if ui.button("📚 Documentation").clicked() {
+                                action = SettingsAction::OpenDocumentation;
+                            }
+                            
+                            ui.add_space(6.0);
+                            
+                            let _ = ui.button("🔗 GitHub");
                         });
                     });
                 });
