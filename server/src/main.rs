@@ -7,8 +7,10 @@ use uuid::Uuid;
 
 mod signaling;
 mod device;
+mod database;
 
 use signaling::SignalingServer;
+use database::Database;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -22,6 +24,19 @@ async fn main() -> std::io::Result<()> {
     // Create shared server state
     let server = Arc::new(Mutex::new(SignalingServer::new()));
     
+    // Create database client
+    let db = match Database::new() {
+        Ok(db) => {
+            tracing::info!("✅ Connected to Supabase database");
+            Arc::new(db)
+        }
+        Err(e) => {
+            tracing::warn!("⚠️  Database connection failed: {}. Running without database.", e);
+            tracing::warn!("Set SUPABASE_URL and SUPABASE_ANON_KEY environment variables to enable database.");
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Database connection failed"));
+        }
+    };
+    
     tracing::info!("Server listening on http://0.0.0.0:8080");
     tracing::info!("WebSocket endpoint: ws://0.0.0.0:8080/ws");
     
@@ -29,6 +44,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(server.clone()))
+            .app_data(web::Data::new(db.clone()))
             .route("/", web::get().to(index))
             .route("/health", web::get().to(health))
             .route("/ws", web::get().to(websocket))
@@ -95,16 +111,27 @@ async fn health() -> impl Responder {
     }))
 }
 
-async fn list_devices(server: web::Data<Arc<Mutex<SignalingServer>>>) -> impl Responder {
-    let server = server.lock().unwrap();
-    let devices = server.get_devices();
-    HttpResponse::Ok().json(devices)
+async fn list_devices(db: web::Data<Arc<Database>>) -> impl Responder {
+    match db.get_devices().await {
+        Ok(devices) => {
+            tracing::info!("Retrieved {} devices from database", devices.len());
+            HttpResponse::Ok().json(devices)
+        }
+        Err(e) => {
+            tracing::error!("Failed to get devices: {}", e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to retrieve devices",
+                "message": e.to_string()
+            }))
+        }
+    }
 }
 
 async fn websocket(
     req: actix_web::HttpRequest,
     stream: web::Payload,
     server: web::Data<Arc<Mutex<SignalingServer>>>,
+    db: web::Data<Arc<Database>>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let (response, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
     
@@ -120,7 +147,7 @@ async fn websocket(
                     
                     // Parse and handle message
                     if let Ok(msg) = serde_json::from_str::<serde_json::Value>(&text) {
-                        let response = handle_message(&server, &device_id, msg).await;
+                        let response = handle_message(&server, &db, &device_id, msg).await;
                         
                         if let Some(response_text) = response {
                             let _ = session.text(response_text).await;
@@ -144,6 +171,7 @@ async fn websocket(
 
 async fn handle_message(
     server: &web::Data<Arc<Mutex<SignalingServer>>>,
+    db: &web::Data<Arc<Database>>,
     device_id: &str,
     msg: serde_json::Value,
 ) -> Option<String> {
@@ -152,12 +180,37 @@ async fn handle_message(
     match msg_type {
         "register" => {
             let device_name = msg.get("device_name")?.as_str()?.to_string();
+            let device_type = msg.get("device_type").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
+            
+            // Register in memory
             let mut server = server.lock().unwrap();
-            server.register_device(device_id.to_string(), device_name);
+            server.register_device(device_id.to_string(), device_name.clone());
+            drop(server);
+            
+            // Register in database
+            let device = database::Device {
+                id: None,
+                device_id: device_id.to_string(),
+                device_name: device_name.clone(),
+                device_type,
+                ip_address: None,
+                last_seen: Some(chrono::Utc::now()),
+                created_at: None,
+            };
+            
+            match db.upsert_device(&device).await {
+                Ok(_) => {
+                    tracing::info!("✅ Device registered in database: {} ({})", device_name, device_id);
+                }
+                Err(e) => {
+                    tracing::error!("❌ Failed to register device in database: {}", e);
+                }
+            }
             
             Some(serde_json::json!({
                 "type": "registered",
                 "device_id": device_id,
+                "device_name": device_name,
                 "status": "success"
             }).to_string())
         }
