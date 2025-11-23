@@ -27,7 +27,7 @@ pub struct ScreenPreviewPanel {
     /// Recording status
     is_recording: bool,
     recording_start_time: Option<std::time::Instant>,
-    video_encoder: Option<Arc<genxlink_client_core::video_encoder::VideoEncoder>>,
+    video_encoder: Arc<Mutex<Option<Arc<genxlink_client_core::video_encoder::VideoEncoder>>>>,
 }
 
 #[derive(Clone)]
@@ -68,7 +68,7 @@ impl ScreenPreviewPanel {
             last_screenshot_msg: None,
             is_recording: false,
             recording_start_time: None,
-            video_encoder: None,
+            video_encoder: Arc::new(Mutex::new(None)),
         }
     }
     
@@ -155,15 +155,17 @@ impl ScreenPreviewPanel {
                                 }
                                 
                                 // Encode frame if recording
-                                if let Some(encoder) = &video_encoder {
-                                    let encoder_clone = encoder.clone();
-                                    let frame_data = frame.data.clone();
-                                    tokio::spawn(async move {
-                                        if let Err(e) = encoder_clone.encode_frame(&frame_data).await {
-                                            tracing::error!("Failed to encode frame: {}", e);
+                                let encoder_guard = video_encoder.clone();
+                                let frame_data_clone = frame.data.clone();
+                                tokio::spawn(async move {
+                                    if let Ok(encoder_opt) = encoder_guard.try_lock() {
+                                        if let Some(encoder) = encoder_opt.as_ref() {
+                                            if let Err(e) = encoder.encode_frame(&frame_data_clone).await {
+                                                tracing::error!("Failed to encode frame: {}", e);
+                                            }
                                         }
-                                    });
-                                }
+                                    }
+                                });
                                 
                                 Ok(())
                             }).await;
@@ -302,7 +304,11 @@ impl ScreenPreviewPanel {
                     }
                 });
                 
-                self.video_encoder = Some(encoder_arc);
+                // Set the encoder in the shared mutex
+                if let Ok(mut encoder_guard) = self.video_encoder.try_lock() {
+                    *encoder_guard = Some(encoder_arc);
+                }
+                
                 self.is_recording = true;
                 self.recording_start_time = Some(std::time::Instant::now());
                 
@@ -319,17 +325,20 @@ impl ScreenPreviewPanel {
             return;
         }
         
-        if let Some(encoder) = self.video_encoder.take() {
-            tokio::spawn(async move {
-                match encoder.stop_recording().await {
-                    Ok(path) => {
-                        tracing::info!("Recording saved to: {}", path.display());
+        // Take encoder from shared mutex
+        if let Ok(mut encoder_guard) = self.video_encoder.try_lock() {
+            if let Some(encoder) = encoder_guard.take() {
+                tokio::spawn(async move {
+                    match encoder.stop_recording().await {
+                        Ok(path) => {
+                            tracing::info!("Recording saved to: {}", path.display());
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to stop recording: {}", e);
+                        }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to stop recording: {}", e);
-                    }
-                }
-            });
+                });
+            }
         }
         
         self.is_recording = false;
