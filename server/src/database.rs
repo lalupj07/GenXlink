@@ -5,6 +5,16 @@ use serde::{Deserialize, Serialize};
 use std::env;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct User {
+    pub id: Option<String>,
+    pub email: String,
+    pub password_hash: String,
+    pub full_name: Option<String>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub last_login: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Device {
     pub id: Option<String>,
     pub device_id: String,
@@ -217,6 +227,67 @@ impl Database {
             .from("devices")
             .delete()
             .eq("device_id", device_id)
+            .execute()
+            .await?;
+
+        Ok(())
+    }
+
+    // ========================================================================
+    // User Management Methods
+    // ========================================================================
+
+    /// Create a new user
+    pub async fn create_user(&self, user: &User) -> Result<String> {
+        let body = serde_json::to_string(user)?;
+        
+        let response = self.client
+            .from("app_users")
+            .insert(body)
+            .execute()
+            .await?;
+
+        let body = response.text().await?;
+        let result: Vec<User> = serde_json::from_str(&body)?;
+        
+        Ok(result.first()
+            .and_then(|u| u.id.clone())
+            .unwrap_or_default())
+    }
+
+    /// Get user by email
+    pub async fn get_user_by_email(&self, email: &str) -> Result<Option<User>> {
+        let response = self.client
+            .from("app_users")
+            .select("*")
+            .eq("email", email)
+            .single()
+            .execute()
+            .await?;
+
+        if response.status().is_success() {
+            let body = response.text().await?;
+            if body.is_empty() || body == "{}" {
+                return Ok(None);
+            }
+            let user: User = serde_json::from_str(&body)?;
+            Ok(Some(user))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Update user last login
+    pub async fn update_last_login(&self, user_id: &str) -> Result<()> {
+        let now = Utc::now();
+        let body = serde_json::json!({
+            "last_login": now
+        });
+
+        self.client
+            .from("app_users")
+            .update(body.to_string())
+            .eq("id", user_id)
             .execute()
             .await?;
 

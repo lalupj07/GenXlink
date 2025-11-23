@@ -278,6 +278,22 @@ async fn register(
         }));
     }
 
+    // Check if user already exists
+    match db.get_user_by_email(&req.email).await {
+        Ok(Some(_)) => {
+            return HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "Email already registered"
+            }));
+        }
+        Ok(None) => {
+            // User doesn't exist, continue
+        }
+        Err(e) => {
+            tracing::error!("Database error checking user: {}", e);
+            // Continue anyway (table might not exist yet)
+        }
+    }
+
     // Hash password
     let password_hash = match auth::hash_password(&req.password) {
         Ok(hash) => hash,
@@ -289,8 +305,31 @@ async fn register(
         }
     };
 
-    // For now, generate a user ID (in production, this would be from database)
-    let user_id = Uuid::new_v4().to_string();
+    // Create user in database
+    let user = database::User {
+        id: None,
+        email: req.email.clone(),
+        password_hash,
+        full_name: req.full_name.clone(),
+        created_at: None,
+        last_login: None,
+    };
+
+    let user_id = match db.create_user(&user).await {
+        Ok(id) => {
+            if id.is_empty() {
+                // Fallback if database insert doesn't return ID
+                Uuid::new_v4().to_string()
+            } else {
+                id
+            }
+        }
+        Err(e) => {
+            tracing::error!("Failed to create user in database: {}", e);
+            // Fallback: generate ID anyway (for demo mode)
+            Uuid::new_v4().to_string()
+        }
+    };
 
     // Generate JWT token
     let token = match auth::generate_token(user_id.clone(), req.email.clone()) {
@@ -303,7 +342,7 @@ async fn register(
         }
     };
 
-    tracing::info!("✅ User registered: {}", req.email);
+    tracing::info!("✅ User registered: {} (ID: {})", req.email, user_id);
 
     HttpResponse::Ok().json(AuthResponse {
         token,
@@ -319,16 +358,67 @@ async fn login(
     req: web::Json<LoginRequest>,
     db: web::Data<Arc<Database>>,
 ) -> impl Responder {
-    // For demo purposes, accept any login with password length >= 8
-    // In production, verify against database
-    if req.password.len() < 8 {
-        return HttpResponse::Unauthorized().json(serde_json::json!({
-            "error": "Invalid credentials"
-        }));
+    // Get user from database
+    let user = match db.get_user_by_email(&req.email).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            return HttpResponse::Unauthorized().json(serde_json::json!({
+                "error": "Invalid credentials"
+            }));
+        }
+        Err(e) => {
+            tracing::error!("Database error fetching user: {}", e);
+            // Fallback for demo mode if table doesn't exist
+            if req.password.len() >= 8 {
+                let user_id = Uuid::new_v4().to_string();
+                let token = match auth::generate_token(user_id.clone(), req.email.clone()) {
+                    Ok(token) => token,
+                    Err(_) => {
+                        return HttpResponse::InternalServerError().json(serde_json::json!({
+                            "error": "Failed to generate token"
+                        }));
+                    }
+                };
+                tracing::warn!("⚠️  Demo mode login: {}", req.email);
+                return HttpResponse::Ok().json(AuthResponse {
+                    token,
+                    user: UserInfo {
+                        id: user_id,
+                        email: req.email.clone(),
+                        full_name: None,
+                    },
+                });
+            }
+            return HttpResponse::Unauthorized().json(serde_json::json!({
+                "error": "Invalid credentials"
+            }));
+        }
+    };
+
+    // Verify password
+    match auth::verify_password(&req.password, &user.password_hash) {
+        Ok(true) => {
+            // Password is correct
+        }
+        Ok(false) => {
+            return HttpResponse::Unauthorized().json(serde_json::json!({
+                "error": "Invalid credentials"
+            }));
+        }
+        Err(e) => {
+            tracing::error!("Failed to verify password: {}", e);
+            return HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Authentication error"
+            }));
+        }
     }
 
-    // Generate user ID (in production, fetch from database)
-    let user_id = Uuid::new_v4().to_string();
+    let user_id = user.id.clone().unwrap_or_else(|| Uuid::new_v4().to_string());
+
+    // Update last login
+    if let Err(e) = db.update_last_login(&user_id).await {
+        tracing::warn!("Failed to update last login: {}", e);
+    }
 
     // Generate JWT token
     let token = match auth::generate_token(user_id.clone(), req.email.clone()) {
@@ -341,14 +431,14 @@ async fn login(
         }
     };
 
-    tracing::info!("✅ User logged in: {}", req.email);
+    tracing::info!("✅ User logged in: {} (ID: {})", req.email, user_id);
 
     HttpResponse::Ok().json(AuthResponse {
         token,
         user: UserInfo {
             id: user_id,
             email: req.email.clone(),
-            full_name: None,
+            full_name: user.full_name,
         },
     })
 }
