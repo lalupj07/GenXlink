@@ -28,9 +28,11 @@ pub struct VideoConfig {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            server_url: "wss://localhost:8080".to_string(),
+            // Production server on Railway
+            server_url: "wss://genxlink-production.up.railway.app/ws".to_string(),
             stun_servers: vec![
                 "stun:stun.l.google.com:19302".to_string(),
+                "stun:stun1.l.google.com:19302".to_string(),
             ],
             turn_servers: vec![],
             video: VideoConfig {
