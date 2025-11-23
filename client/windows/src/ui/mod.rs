@@ -7,6 +7,7 @@ pub mod remote_control_panel;
 pub mod file_transfer_panel;
 pub mod premium_features;
 pub mod permission_panel;
+pub mod screen_preview;
 
 pub use app::GenXLinkApp;
 pub use notifications::{Notification, NotificationManager, NotificationType};
