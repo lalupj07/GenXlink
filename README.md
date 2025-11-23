@@ -146,3 +146,7 @@ See [LICENSE](LICENSE) and [COPYRIGHT](COPYRIGHT) files for details.
 **Built with ❤️ using Rust by GenXis Innovations**
 
 *Contact: genxisinnovation@outlook.com*
+
+---
+
+🇮🇳 **Created in India • Crafted by Indians** 🇮🇳

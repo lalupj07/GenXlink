@@ -382,6 +382,8 @@ target/release/genxlink.exe
 
 ---
 
-**Built with ❤️ using Rust**
+**Built with ❤️ using Rust by GenXis Innovations**
 
 *GenXis Innovations - November 2025*
+
+🇮🇳 **Created in India • Crafted by Indians** 🇮🇳
