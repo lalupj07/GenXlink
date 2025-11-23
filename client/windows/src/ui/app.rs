@@ -4,6 +4,7 @@ use super::{NotificationManager, ConnectionDialog};
 use super::remote_control_panel::RemoteControlPanel;
 use super::premium_features::PremiumFeaturesPanel;
 use super::permission_panel::PermissionPanel;
+use super::screen_preview::ScreenPreviewPanel;
 use genxlink_client_core::audio_streaming::AudioStreamManager;
 use genxlink_client_core::localization::LocalizationManager;
 use genxlink_client_core::theme::ThemeManager;
@@ -37,6 +38,9 @@ pub struct GenXLinkApp {
     /// Permission panel
     permission_panel: PermissionPanel,
     
+    /// Screen preview panel
+    screen_preview: ScreenPreviewPanel,
+    
     /// Audio manager
     audio_manager: AudioStreamManager,
     
@@ -51,6 +55,7 @@ pub struct GenXLinkApp {
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Tab {
     Devices,
+    ScreenCapture,
     History,
     Settings,
     Premium,
@@ -129,6 +134,7 @@ impl Default for GenXLinkApp {
             remote_control_panel: RemoteControlPanel::new(),
             premium_panel: PremiumFeaturesPanel::new(),
             permission_panel: PermissionPanel::new(),
+            screen_preview: ScreenPreviewPanel::new(),
             audio_manager: AudioStreamManager::new(),
             localization: LocalizationManager::new(),
             theme_manager: ThemeManager::new(),
@@ -177,6 +183,7 @@ impl eframe::App for GenXLinkApp {
                 ui.separator();
                 
                 ui.selectable_value(&mut self.current_tab, Tab::Devices, "📱 Devices");
+                ui.selectable_value(&mut self.current_tab, Tab::ScreenCapture, "📺 Screen Capture");
                 ui.selectable_value(&mut self.current_tab, Tab::History, "📜 History");
                 ui.selectable_value(&mut self.current_tab, Tab::Settings, "⚙ Settings");
                 ui.selectable_value(&mut self.current_tab, Tab::Premium, "🌟 Premium");
@@ -212,6 +219,7 @@ impl eframe::App for GenXLinkApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             match self.current_tab {
                 Tab::Devices => self.show_devices_tab(ui),
+                Tab::ScreenCapture => self.show_screen_capture_tab(ui),
                 Tab::History => self.show_history_tab(ui),
                 Tab::Settings => self.show_settings_tab(ui),
                 Tab::Premium => self.show_premium_tab(ui),
@@ -396,6 +404,10 @@ impl GenXLinkApp {
                 }
             });
         });
+    }
+    
+    fn show_screen_capture_tab(&mut self, ui: &mut egui::Ui) {
+        self.screen_preview.ui(ui);
     }
     
     fn show_premium_tab(&mut self, ui: &mut egui::Ui) {
