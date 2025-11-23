@@ -5,11 +5,13 @@ pub mod messages;
 pub mod device;
 pub mod connection;
 pub mod signaling;
+pub mod input;
 
 pub use messages::*;
 pub use device::*;
 pub use connection::*;
 pub use signaling::*;
+pub use input::*;
 
 /// Protocol version for compatibility checking
 pub const PROTOCOL_VERSION: u32 = 1;

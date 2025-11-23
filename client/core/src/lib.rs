@@ -29,6 +29,7 @@ pub mod screen_capture;
 pub mod video_encoder;
 pub mod screen_streamer;
 pub mod webrtc_session;
+pub mod input_injection;
 
 pub use capture::*;
 pub use encoder::*;
