@@ -334,29 +334,41 @@
             }
 
             const resultDiv = document.getElementById('protectedResult');
-            resultDiv.innerHTML = '<div class="result">Testing protected endpoint...</div>';
+            resultDiv.innerHTML = '<div class="result">Testing protected endpoints...</div>';
 
             try {
-                const response = await fetch(`${API_URL}/devices`, {
+                // Test /api/me
+                const meResponse = await fetch(`${API_URL}/api/me`, {
                     headers: {
                         'Authorization': `Bearer ${currentToken}`
                     }
                 });
+                const meData = await meResponse.json();
 
-                const data = await response.json();
+                // Test /api/devices
+                const devicesResponse = await fetch(`${API_URL}/api/devices`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                const devicesData = await devicesResponse.json();
 
-                if (response.ok) {
+                if (meResponse.ok && devicesResponse.ok) {
                     resultDiv.innerHTML = `
                         <div class="success">
-                            <strong>✅ Access Granted!</strong><br>
-                            Response: ${JSON.stringify(data, null, 2)}
+                            <strong>✅ Access Granted!</strong><br><br>
+                            <strong>/api/me:</strong><br>
+                            ${JSON.stringify(meData, null, 2)}<br><br>
+                            <strong>/api/devices:</strong><br>
+                            ${JSON.stringify(devicesData, null, 2)}
                         </div>
                     `;
                 } else {
                     resultDiv.innerHTML = `
                         <div class="error">
                             <strong>❌ Access Denied</strong><br>
-                            ${JSON.stringify(data, null, 2)}
+                            /api/me: ${meResponse.status}<br>
+                            /api/devices: ${devicesResponse.status}
                         </div>
                     `;
                 }
@@ -375,16 +387,26 @@
             resultDiv.innerHTML = '<div class="result">Testing without authentication...</div>';
 
             try {
-                const response = await fetch(`${API_URL}/devices`);
-                const data = await response.json();
-
-                resultDiv.innerHTML = `
-                    <div class="result">
-                        <strong>Response (no auth):</strong><br>
-                        Status: ${response.status}<br>
-                        Data: ${JSON.stringify(data, null, 2)}
-                    </div>
-                `;
+                const response = await fetch(`${API_URL}/api/devices`);
+                
+                if (response.status === 401) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>✅ Protected Correctly!</strong><br>
+                            Status: 401 Unauthorized<br>
+                            The endpoint requires authentication.
+                        </div>
+                    `;
+                } else {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <strong>Response (no auth):</strong><br>
+                            Status: ${response.status}<br>
+                            Data: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                }
             } catch (error) {
                 resultDiv.innerHTML = `
                     <div class="error">

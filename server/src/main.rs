@@ -1,5 +1,6 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use actix_ws::Message;
+use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -43,15 +44,25 @@ async fn main() -> std::io::Result<()> {
     
     // Start HTTP server
     HttpServer::new(move || {
+        let auth_middleware = HttpAuthentication::bearer(auth::validator);
+        
         App::new()
             .app_data(web::Data::new(server.clone()))
             .app_data(web::Data::new(db.clone()))
+            // Public routes
             .route("/", web::get().to(index))
             .route("/health", web::get().to(health))
-            .route("/ws", web::get().to(websocket))
-            .route("/devices", web::get().to(list_devices))
             .route("/auth/register", web::post().to(register))
             .route("/auth/login", web::post().to(login))
+            // Protected routes (require JWT token)
+            .service(
+                web::scope("/api")
+                    .wrap(auth_middleware)
+                    .route("/devices", web::get().to(list_devices))
+                    .route("/me", web::get().to(get_current_user))
+            )
+            // WebSocket (no auth for now, can add later)
+            .route("/ws", web::get().to(websocket))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
@@ -352,6 +363,25 @@ async fn register(
             full_name: req.full_name.clone(),
         },
     })
+}
+
+async fn get_current_user(req: HttpRequest) -> impl Responder {
+    // Extract claims from request extensions (set by auth middleware)
+    match req.extensions().get::<auth::Claims>() {
+        Some(claims) => {
+            HttpResponse::Ok().json(serde_json::json!({
+                "user_id": claims.sub,
+                "email": claims.email,
+                "exp": claims.exp,
+                "iat": claims.iat
+            }))
+        }
+        None => {
+            HttpResponse::Unauthorized().json(serde_json::json!({
+                "error": "Unauthorized"
+            }))
+        }
+    }
 }
 
 async fn login(
