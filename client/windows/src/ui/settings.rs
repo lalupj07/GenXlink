@@ -68,23 +68,24 @@ impl SettingsPanel {
     pub fn show(&mut self, ui: &mut egui::Ui) -> SettingsAction {
         let mut action = SettingsAction::None;
 
-        // Compact header
+        // Modern header with gradient feel
         ui.vertical_centered(|ui| {
-            ui.add_space(8.0);
-            ui.label(egui::RichText::new("Settings")
-                .size(20.0)
-                .strong());
-            ui.add_space(3.0);
+            ui.add_space(12.0);
+            ui.label(egui::RichText::new("⚙️ Settings")
+                .size(24.0)
+                .strong()
+                .color(egui::Color32::WHITE));
+            ui.add_space(4.0);
             ui.label(egui::RichText::new("Configure your GenXLink experience")
-                .size(12.0)
-                .color(egui::Color32::from_rgb(107, 114, 128)));
-            ui.add_space(15.0);
+                .size(13.0)
+                .color(egui::Color32::from_rgb(156, 163, 175)));
+            ui.add_space(20.0);
         });
 
-        // Compact grid layout
+        // Modern card-based grid layout
         egui::Grid::new("settings_grid")
             .num_columns(2)
-            .spacing([15.0, 15.0])
+            .spacing([20.0, 20.0])
             .show(ui, |ui| {
                 
                 // Appearance Section
@@ -225,72 +226,93 @@ impl SettingsPanel {
                     }
                 });
 
-                // About Section
+                // About Section - Redesigned with modern card feel
                 ui.vertical_centered(|ui| {
-                    ui.heading("ℹ️ About");
+                    ui.add_space(5.0);
+                    
+                    // About heading with icon
+                    ui.label(egui::RichText::new("ℹ️ About")
+                        .size(18.0)
+                        .strong()
+                        .color(egui::Color32::WHITE));
+                    
+                    ui.add_space(12.0);
+                    
+                    // App name with gradient-like styling
+                    ui.label(egui::RichText::new("🚀 GenXLink")
+                        .size(16.0)
+                        .strong()
+                        .color(egui::Color32::from_rgb(96, 165, 250)));
+                    
                     ui.add_space(8.0);
                     
-                    ui.vertical_centered(|ui| {
-                        ui.label(egui::RichText::new("🚀 GenXLink")
-                            .size(14.0)
-                            .strong());
+                    // Version and details
+                    ui.label(egui::RichText::new("Version 0.1.0")
+                        .size(12.0)
+                        .color(egui::Color32::from_rgb(156, 163, 175)));
+                    
+                    ui.add_space(4.0);
+                    
+                    ui.label(egui::RichText::new("🇮🇳 Created in India")
+                        .size(12.0)
+                        .color(egui::Color32::from_rgb(156, 163, 175)));
+                    
+                    ui.add_space(4.0);
+                    
+                    ui.label(egui::RichText::new("📧 genxisinnovation@outlook.com")
+                        .size(11.0)
+                        .color(egui::Color32::from_rgb(156, 163, 175)));
+                    
+                    ui.add_space(12.0);
+                    
+                    // Action buttons with vibrant colors
+                    ui.horizontal(|ui| {
+                        if ui.add(
+                            egui::Button::new(
+                                egui::RichText::new("📄 License")
+                                    .color(egui::Color32::WHITE)
+                                    .size(12.0)
+                                    .strong()
+                            )
+                                .fill(egui::Color32::from_rgb(6, 182, 212))
+                                .rounding(egui::Rounding::same(8.0))
+                                .min_size(egui::vec2(90.0, 32.0))
+                        ).clicked() {
+                            action = SettingsAction::ViewLicense;
+                        }
                         
-                        ui.add_space(6.0);
+                        ui.add_space(10.0);
                         
-                        ui.label("Version 0.1.0");
-                        ui.label("🇮🇳 Created in India");
-                        ui.label("📧 genxisinnovation@outlook.com");
+                        if ui.add(
+                            egui::Button::new(
+                                egui::RichText::new("📚 Documentation")
+                                    .color(egui::Color32::WHITE)
+                                    .size(12.0)
+                                    .strong()
+                            )
+                                .fill(egui::Color32::from_rgb(34, 197, 94))
+                                .rounding(egui::Rounding::same(8.0))
+                                .min_size(egui::vec2(140.0, 32.0))
+                        ).clicked() {
+                            action = SettingsAction::OpenDocumentation;
+                        }
                         
-                        ui.add_space(4.0);
+                        ui.add_space(10.0);
                         
-                        ui.vertical_centered(|ui| {
-                            ui.horizontal(|ui| {
-                                if ui.add(
-                                    egui::Button::new(
-                                        egui::RichText::new("📄 License")
-                                            .color(egui::Color32::WHITE)
-                                            .size(13.0)
-                                            .strong()
-                                    )
-                                        .fill(egui::Color32::from_rgb(6, 182, 212))
-                                        .rounding(egui::Rounding::same(6.0))
-                                        .min_size(egui::vec2(85.0, 30.0))
-                                ).clicked() {
-                                    action = SettingsAction::ViewLicense;
-                                }
-                                
-                                ui.add_space(8.0);
-                                
-                                if ui.add(
-                                    egui::Button::new(
-                                        egui::RichText::new("📚 Documentation")
-                                            .color(egui::Color32::WHITE)
-                                            .size(13.0)
-                                            .strong()
-                                    )
-                                        .fill(egui::Color32::from_rgb(34, 197, 94))
-                                        .rounding(egui::Rounding::same(6.0))
-                                        .min_size(egui::vec2(130.0, 30.0))
-                                ).clicked() {
-                                    action = SettingsAction::OpenDocumentation;
-                                }
-                                
-                                ui.add_space(8.0);
-                                
-                                let _ = ui.add(
-                                    egui::Button::new(
-                                        egui::RichText::new("🔗 GitHub")
-                                            .color(egui::Color32::WHITE)
-                                            .size(13.0)
-                                            .strong()
-                                    )
-                                        .fill(egui::Color32::from_rgb(168, 85, 247))
-                                        .rounding(egui::Rounding::same(6.0))
-                                        .min_size(egui::vec2(75.0, 30.0))
-                                );
-                            });
-                        });
+                        let _ = ui.add(
+                            egui::Button::new(
+                                egui::RichText::new("🔗 GitHub")
+                                    .color(egui::Color32::WHITE)
+                                    .size(12.0)
+                                    .strong()
+                            )
+                                .fill(egui::Color32::from_rgb(168, 85, 247))
+                                .rounding(egui::Rounding::same(8.0))
+                                .min_size(egui::vec2(85.0, 32.0))
+                        );
                     });
+                    
+                    ui.add_space(5.0);
                 });
 
                 ui.end_row();
