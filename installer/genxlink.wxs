@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="GenXLink" 
+           Language="1033" 
+           Version="0.1.0" 
+           Manufacturer="GenXis Innovations" 
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="GenXLink Remote Desktop Application"
+             Comments="Cross-platform remote desktop with end-to-end encryption" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="GenXLink" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+
+    <Icon Id="icon.ico" SourceFile="assets\icon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
+    
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="GenXLink" />
+      </Directory>
+      
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="GenXLink"/>
+      </Directory>
+      
+      <Directory Id="DesktopFolder" Name="Desktop"/>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="GenXLinkExe" Guid="*">
+        <File Id="GenXLinkExe" 
+              Source="..\target\release\genxlink-client.exe" 
+              KeyPath="yes" 
+              Checksum="yes">
+          <Shortcut Id="DesktopShortcut"
+                    Directory="DesktopFolder"
+                    Name="GenXLink"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="icon.ico"
+                    IconIndex="0"
+                    Advertise="yes" />
+        </File>
+      </Component>
+      
+      <Component Id="ReadmeFile" Guid="*">
+        <File Id="ReadmeFile" Source="..\README.md" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="*">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="GenXLink"
+                  Description="GenXLink Remote Desktop"
+                  Target="[#GenXLinkExe]"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="icon.ico"/>
+        <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" 
+                       Key="Software\GenXis\GenXLink" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>
