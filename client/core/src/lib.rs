@@ -31,6 +31,7 @@ pub mod screen_streamer;
 pub mod webrtc_session;
 pub mod input_injection;
 pub mod remote_control_manager;
+pub mod audio_capture;
 
 pub use capture::*;
 pub use encoder::*;
