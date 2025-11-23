@@ -246,29 +246,47 @@ impl SettingsPanel {
                         ui.vertical_centered(|ui| {
                             ui.horizontal(|ui| {
                                 if ui.add(
-                                    egui::Button::new("📄 License")
-                                        .fill(egui::Color32::from_rgb(59, 130, 246))
-                                        .rounding(egui::Rounding::same(6.0))
+                                    egui::Button::new(
+                                        egui::RichText::new("📄 License")
+                                            .color(egui::Color32::WHITE)
+                                            .size(13.0)
+                                            .strong()
+                                    )
+                                        .fill(egui::Color32::from_rgb(37, 99, 235))
+                                        .rounding(egui::Rounding::same(8.0))
+                                        .min_size(egui::vec2(80.0, 32.0))
                                 ).clicked() {
                                     action = SettingsAction::ViewLicense;
                                 }
                                 
-                                ui.add_space(8.0);
+                                ui.add_space(10.0);
                                 
                                 if ui.add(
-                                    egui::Button::new("📚 Documentation")
-                                        .fill(egui::Color32::from_rgb(34, 197, 94))
-                                        .rounding(egui::Rounding::same(6.0))
+                                    egui::Button::new(
+                                        egui::RichText::new("📚 Documentation")
+                                            .color(egui::Color32::WHITE)
+                                            .size(13.0)
+                                            .strong()
+                                    )
+                                        .fill(egui::Color32::from_rgb(22, 163, 74))
+                                        .rounding(egui::Rounding::same(8.0))
+                                        .min_size(egui::vec2(100.0, 32.0))
                                 ).clicked() {
                                     action = SettingsAction::OpenDocumentation;
                                 }
                                 
-                                ui.add_space(8.0);
+                                ui.add_space(10.0);
                                 
                                 let _ = ui.add(
-                                    egui::Button::new("🔗 GitHub")
-                                        .fill(egui::Color32::from_rgb(139, 92, 246))
-                                        .rounding(egui::Rounding::same(6.0))
+                                    egui::Button::new(
+                                        egui::RichText::new("🔗 GitHub")
+                                            .color(egui::Color32::WHITE)
+                                            .size(13.0)
+                                            .strong()
+                                    )
+                                        .fill(egui::Color32::from_rgb(109, 40, 217))
+                                        .rounding(egui::Rounding::same(8.0))
+                                        .min_size(egui::vec2(70.0, 32.0))
                                 );
                             });
                         });
