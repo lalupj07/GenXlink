@@ -35,14 +35,23 @@ pub struct Database {
 impl Database {
     pub fn new() -> Result<Self> {
         let supabase_url = env::var("SUPABASE_URL")
-            .unwrap_or_else(|_| "https://xdzwbouvcmhhfnfsnffo.supabase.co".to_string());
+            .unwrap_or_else(|_| "https://xdzwbouvcmhhfnfsnffo.supabase.co".to_string())
+            .trim()
+            .to_string();
         
         let api_key = env::var("SUPABASE_ANON_KEY")
-            .unwrap_or_else(|_| "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkendib3V2Y21oaGZuZnNuZmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODY5MTAsImV4cCI6MjA3OTQ2MjkxMH0.TZZx9dvos-8gXhuEuOU_I6SXNeFCY_3Rni80VTF6j0U".to_string());
+            .unwrap_or_else(|_| "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkendib3V2Y21oaGZuZnNuZmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODY5MTAsImV4cCI6MjA3OTQ2MjkxMH0.TZZx9dvos-8gXhuEuOU_I6SXNeFCY_3Rni80VTF6j0U".to_string())
+            .trim()
+            .to_string();
 
-        let client = Postgrest::new(supabase_url)
-            .insert_header("apikey", &api_key)
-            .insert_header("Authorization", format!("Bearer {}", api_key));
+        // Validate that we have proper values
+        if supabase_url.is_empty() || api_key.is_empty() {
+            return Err(anyhow::anyhow!("SUPABASE_URL and SUPABASE_ANON_KEY must be set"));
+        }
+
+        let client = Postgrest::new(&supabase_url)
+            .insert_header("apikey", api_key.as_str())
+            .insert_header("Authorization", format!("Bearer {}", api_key).as_str());
 
         Ok(Self { client })
     }
