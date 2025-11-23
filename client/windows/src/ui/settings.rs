@@ -80,42 +80,59 @@ impl SettingsPanel {
         ui.add_space(15.0);
 
         // Appearance Section
-        ui.heading("🎨 Appearance");
-        ui.add_space(10.0);
-        
-        ui.horizontal(|ui| {
-            ui.label("🎨 Theme:");
+        ui.group(|ui| {
+            ui.heading("🎨 Appearance");
             ui.add_space(10.0);
             
-            egui::ComboBox::from_label("")
-                .selected_text(format!("{:?}", self.selected_theme))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut self.selected_theme, AppTheme::Light, "☀️ Light");
-                    ui.selectable_value(&mut self.selected_theme, AppTheme::Dark, "🌙 Dark");
-                    ui.selectable_value(&mut self.selected_theme, AppTheme::System, "💻 System");
-                });
-        });
-        
-        ui.add_space(10.0);
-        ui.horizontal(|ui| {
-            ui.label("🌍 Language:");
-            ui.add_space(10.0);
+            ui.horizontal(|ui| {
+                ui.label("🎨 Theme:");
+                ui.add_space(15.0);
+                
+                let theme_text = match self.selected_theme {
+                    AppTheme::Light => "☀️ Light",
+                    AppTheme::Dark => "🌙 Dark", 
+                    AppTheme::System => "💻 System",
+                };
+                
+                egui::ComboBox::from_label("")
+                    .selected_text(theme_text)
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.selected_theme, AppTheme::Light, "☀️ Light");
+                        ui.selectable_value(&mut self.selected_theme, AppTheme::Dark, "🌙 Dark");
+                        ui.selectable_value(&mut self.selected_theme, AppTheme::System, "💻 System");
+                    });
+            });
             
-            egui::ComboBox::from_label("")
-                .selected_text(format!("{:?}", self.selected_language))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut self.selected_language, AppLanguage::English, "🇬🇧 English");
-                    ui.selectable_value(&mut self.selected_language, AppLanguage::Hindi, "🇮🇳 हिंदी");
-                    ui.selectable_value(&mut self.selected_language, AppLanguage::Tamil, "🇮🇳 தமிழ்");
-                    ui.selectable_value(&mut self.selected_language, AppLanguage::Telugu, "🇮🇳 తెలుగు");
-                    ui.selectable_value(&mut self.selected_language, AppLanguage::Bengali, "🇮🇳 বাংলা");
-                });
-        });
-        
-        ui.add_space(10.0);
-        ui.horizontal(|ui| {
-            ui.colored_label(egui::Color32::from_rgb(150, 150, 150), 
-                "💡 Theme changes apply immediately • Language support coming soon");
+            ui.add_space(15.0);
+            
+            ui.horizontal(|ui| {
+                ui.label("🌍 Language:");
+                ui.add_space(15.0);
+                
+                let lang_text = match self.selected_language {
+                    AppLanguage::English => "🇬🇧 English",
+                    AppLanguage::Hindi => "🇮🇳 हिंदी",
+                    AppLanguage::Tamil => "🇮🇳 தமிழ்",
+                    AppLanguage::Telugu => "🇮🇳 తెలుగు",
+                    AppLanguage::Bengali => "🇮🇳 বাংলা",
+                };
+                
+                egui::ComboBox::from_label("")
+                    .selected_text(lang_text)
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::English, "🇬🇧 English");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Hindi, "🇮🇳 हिंदी");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Tamil, "🇮🇳 தமிழ்");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Telugu, "🇮🇳 తెలుగు");
+                        ui.selectable_value(&mut self.selected_language, AppLanguage::Bengali, "🇮🇳 বাংলা");
+                    });
+            });
+            
+            ui.add_space(15.0);
+            ui.horizontal(|ui| {
+                ui.colored_label(egui::Color32::from_rgb(100, 150, 200), 
+                    "💡 Theme changes apply immediately • Language support coming soon");
+            });
         });
 
         ui.add_space(20.0);
@@ -123,65 +140,81 @@ impl SettingsPanel {
         ui.add_space(15.0);
 
         // Behavior Section
-        ui.heading("🔧 Behavior");
-        ui.add_space(10.0);
-        
-        ui.checkbox(&mut self.auto_start, "🚀 Start GenXLink with Windows");
-        ui.checkbox(&mut self.minimize_to_tray, "📌 Minimize to system tray");
-        ui.checkbox(&mut self.enable_notifications, "🔔 Enable desktop notifications");
+        ui.group(|ui| {
+            ui.heading("🔧 Behavior");
+            ui.add_space(10.0);
+            
+            ui.checkbox(&mut self.auto_start, "🚀 Start GenXLink with Windows");
+            ui.add_space(8.0);
+            ui.checkbox(&mut self.minimize_to_tray, "📌 Minimize to system tray");
+            ui.add_space(8.0);
+            ui.checkbox(&mut self.enable_notifications, "🔔 Enable desktop notifications");
+        });
 
         ui.add_space(20.0);
         ui.separator();
         ui.add_space(15.0);
 
         // Advanced Section
-        ui.heading("🔬 Advanced");
-        ui.add_space(10.0);
-        
-        ui.horizontal(|ui| {
-            ui.label("📊 Log Level:");
+        ui.group(|ui| {
+            ui.heading("🔬 Advanced");
             ui.add_space(10.0);
             
-            egui::ComboBox::from_label("")
-                .selected_text(format!("{:?}", self.log_level))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut self.log_level, LogLevel::Error, "❌ Error");
-                    ui.selectable_value(&mut self.log_level, LogLevel::Warn, "⚠️ Warning");
-                    ui.selectable_value(&mut self.log_level, LogLevel::Info, "ℹ️ Info");
-                    ui.selectable_value(&mut self.log_level, LogLevel::Debug, "🐛 Debug");
-                });
-        });
+            ui.horizontal(|ui| {
+                ui.label("📊 Log Level:");
+                ui.add_space(15.0);
+                
+                let log_text = match self.log_level {
+                    LogLevel::Error => "❌ Error",
+                    LogLevel::Warn => "⚠️ Warning",
+                    LogLevel::Info => "ℹ️ Info",
+                    LogLevel::Debug => "🐛 Debug",
+                };
+                
+                egui::ComboBox::from_label("")
+                    .selected_text(log_text)
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.log_level, LogLevel::Error, "❌ Error");
+                        ui.selectable_value(&mut self.log_level, LogLevel::Warn, "⚠️ Warning");
+                        ui.selectable_value(&mut self.log_level, LogLevel::Info, "ℹ️ Info");
+                        ui.selectable_value(&mut self.log_level, LogLevel::Debug, "🐛 Debug");
+                    });
+            });
 
-        ui.add_space(10.0);
-        if ui.button("📂 Open Log Folder").clicked() {
-            action = SettingsAction::OpenLogFolder;
-        }
+            ui.add_space(15.0);
+            if ui.button("📂 Open Log Folder").clicked() {
+                action = SettingsAction::OpenLogFolder;
+            }
+        });
 
         ui.add_space(20.0);
         ui.separator();
         ui.add_space(15.0);
 
         // About Section
-        ui.heading("ℹ️ About");
-        ui.add_space(10.0);
-        
-        ui.vertical(|ui| {
-            ui.label("🚀 GenXLink Remote Desktop");
-            ui.label("📍 Version: 0.1.0");
-            ui.label("🇮🇳 Created in India • Crafted by Indians");
-            ui.label("📧 Contact: genxisinnovation@outlook.com");
-            ui.label("🔗 GitHub: https://github.com/lalupj07/GenXlink");
-        });
-
-        ui.add_space(10.0);
-        ui.horizontal(|ui| {
-            if ui.button("📄 View License").clicked() {
-                action = SettingsAction::ViewLicense;
-            }
+        ui.group(|ui| {
+            ui.heading("ℹ️ About");
             ui.add_space(10.0);
-            if ui.button("📚 Documentation").clicked() {
-                action = SettingsAction::OpenDocumentation;
-            }
+            
+            ui.vertical(|ui| {
+                ui.label(egui::RichText::new("🚀 GenXLink Remote Desktop").size(16.0).strong());
+                ui.add_space(5.0);
+                ui.label("📍 Version: 0.1.0");
+                ui.label("🇮🇳 Created in India • Crafted by Indians");
+                ui.label("📧 Contact: genxisinnovation@outlook.com");
+                ui.label("🔗 GitHub: https://github.com/lalupj07/GenXlink");
+            });
+
+            ui.add_space(15.0);
+            ui.horizontal(|ui| {
+                if ui.button("📄 View License").clicked() {
+                    action = SettingsAction::ViewLicense;
+                }
+                ui.add_space(10.0);
+                if ui.button("📚 Documentation").clicked() {
+                    action = SettingsAction::OpenDocumentation;
+                }
+            });
         });
 
         action
