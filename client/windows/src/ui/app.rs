@@ -3,6 +3,10 @@ use genxlink_protocol::DeviceId;
 use super::{NotificationManager, ConnectionDialog};
 use super::remote_control_panel::RemoteControlPanel;
 use super::premium_features::PremiumFeaturesPanel;
+use super::permission_panel::PermissionPanel;
+use genxlink_client_core::audio_streaming::AudioStreamManager;
+use genxlink_client_core::localization::LocalizationManager;
+use genxlink_client_core::theme::ThemeManager;
 
 /// Main application state
 pub struct GenXLinkApp {
