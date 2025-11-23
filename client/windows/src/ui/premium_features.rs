@@ -6,36 +6,6 @@ pub struct PremiumFeaturesPanel {
     show_details: bool,
     show_annual: bool,
     selected_tier: PricingTier,
-    selected_theme: AppTheme,
-    selected_language: AppLanguage,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AppTheme {
-    Light,
-    Dark,
-    System,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AppLanguage {
-    English,
-    Hindi,
-    Tamil,
-    Telugu,
-    Bengali,
-}
-
-impl Default for AppTheme {
-    fn default() -> Self {
-        Self::System
-    }
-}
-
-impl Default for AppLanguage {
-    fn default() -> Self {
-        Self::English
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,8 +27,6 @@ impl PremiumFeaturesPanel {
             show_details: false,
             show_annual: true,
             selected_tier: PricingTier::Free,
-            selected_theme: AppTheme::System,
-            selected_language: AppLanguage::English,
         }
     }
 
@@ -187,48 +155,6 @@ impl PremiumFeaturesPanel {
                     false,
                     &mut action,
                 );
-            });
-
-            ui.add_space(20.0);
-            ui.separator();
-            ui.add_space(15.0);
-
-            // Theme & Language Settings
-            ui.heading("🎨 Appearance & Language");
-            ui.add_space(10.0);
-            
-            ui.horizontal(|ui| {
-                ui.label("🎨 Theme:");
-                ui.add_space(10.0);
-                
-                egui::ComboBox::from_label("")
-                    .selected_text(format!("{:?}", self.selected_theme))
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.selected_theme, AppTheme::Light, "☀️ Light");
-                        ui.selectable_value(&mut self.selected_theme, AppTheme::Dark, "🌙 Dark");
-                        ui.selectable_value(&mut self.selected_theme, AppTheme::System, "💻 System");
-                    });
-                
-                ui.add_space(20.0);
-                
-                ui.label("🌍 Language:");
-                ui.add_space(10.0);
-                
-                egui::ComboBox::from_label("")
-                    .selected_text(format!("{:?}", self.selected_language))
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.selected_language, AppLanguage::English, "🇬🇧 English");
-                        ui.selectable_value(&mut self.selected_language, AppLanguage::Hindi, "🇮🇳 हिंदी");
-                        ui.selectable_value(&mut self.selected_language, AppLanguage::Tamil, "🇮🇳 தமிழ்");
-                        ui.selectable_value(&mut self.selected_language, AppLanguage::Telugu, "🇮🇳 తెలుగు");
-                        ui.selectable_value(&mut self.selected_language, AppLanguage::Bengali, "🇮🇳 বাংলা");
-                    });
-            });
-            
-            ui.add_space(10.0);
-            ui.horizontal(|ui| {
-                ui.colored_label(egui::Color32::from_rgb(150, 150, 150), 
-                    "💡 Theme changes apply immediately • Language support coming soon");
             });
 
             ui.add_space(20.0);

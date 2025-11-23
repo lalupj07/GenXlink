@@ -6,6 +6,7 @@ use super::premium_features::PremiumFeaturesPanel;
 use super::permission_panel::PermissionPanel;
 use super::screen_preview::ScreenPreviewPanel;
 use super::streaming_panel::StreamingPanel;
+use super::settings::SettingsPanel;
 use genxlink_client_core::audio_streaming::AudioStreamManager;
 use genxlink_client_core::localization::LocalizationManager;
 use genxlink_client_core::theme::ThemeManager;
@@ -44,6 +45,9 @@ pub struct GenXLinkApp {
     
     /// Streaming panel
     streaming_panel: StreamingPanel,
+    
+    /// Settings panel
+    settings_panel: SettingsPanel,
     
     /// Audio manager
     audio_manager: AudioStreamManager,
@@ -141,6 +145,7 @@ impl Default for GenXLinkApp {
             permission_panel: PermissionPanel::new(),
             screen_preview: ScreenPreviewPanel::new(),
             streaming_panel: StreamingPanel::new(),
+            settings_panel: SettingsPanel::new(),
             audio_manager: AudioStreamManager::new(),
             localization: LocalizationManager::new(),
             theme_manager: ThemeManager::new(),
@@ -355,63 +360,33 @@ impl GenXLinkApp {
     }
     
     fn show_settings_tab(&mut self, ui: &mut egui::Ui) {
-        ui.heading("⚙ Settings");
-        ui.add_space(10.0);
+        let action = self.settings_panel.show(ui);
         
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            ui.collapsing("General", |ui| {
-                ui.label("Device name:");
-                ui.text_edit_singleline(&mut "My Device".to_string());
-                
-                ui.add_space(5.0);
-                
-                ui.checkbox(&mut true, "Start on boot");
-                ui.checkbox(&mut true, "Minimize to tray");
-                ui.checkbox(&mut true, "Show notifications");
-            });
-            
-            ui.add_space(10.0);
-            
-            ui.collapsing("Connection", |ui| {
-                ui.label("STUN Server:");
-                ui.text_edit_singleline(&mut "stun:stun.l.google.com:19302".to_string());
-                
-                ui.add_space(5.0);
-                
-                ui.label("Connection timeout (seconds):");
-                ui.add(egui::Slider::new(&mut 30, 10..=120));
-            });
-            
-            ui.add_space(10.0);
-            
-            ui.collapsing("Display", |ui| {
-                ui.label("Video quality:");
-                egui::ComboBox::from_label("")
-                    .selected_text("High")
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut 0, 0, "Low");
-                        ui.selectable_value(&mut 1, 1, "Medium");
-                        ui.selectable_value(&mut 2, 2, "High");
-                        ui.selectable_value(&mut 3, 3, "Ultra");
-                    });
-                
-                ui.add_space(5.0);
-                
-                ui.label("Frame rate:");
-                ui.add(egui::Slider::new(&mut 60, 15..=120).suffix(" FPS"));
-            });
-            
-            ui.add_space(20.0);
-            
-            ui.horizontal(|ui| {
-                if ui.button("Save").clicked() {
-                    tracing::info!("Settings saved");
+        // Handle settings actions
+        match action {
+            super::settings::SettingsAction::OpenLogFolder => {
+                if let Err(e) = std::fs::create_dir_all("logs") {
+                    tracing::error!("Failed to create log folder: {}", e);
                 }
-                if ui.button("Reset to defaults").clicked() {
-                    tracing::info!("Settings reset");
+                if let Err(e) = open::that("logs") {
+                    tracing::error!("Failed to open log folder: {}", e);
+                    self.notification_manager.error("Error", "Could not open log folder");
                 }
-            });
-        });
+            }
+            super::settings::SettingsAction::ViewLicense => {
+                if let Err(e) = open::that("LICENSE") {
+                    tracing::error!("Failed to open license file: {}", e);
+                    self.notification_manager.error("Error", "Could not open license file");
+                }
+            }
+            super::settings::SettingsAction::OpenDocumentation => {
+                if let Err(e) = open::that("README.md") {
+                    tracing::error!("Failed to open documentation: {}", e);
+                    self.notification_manager.error("Error", "Could not open documentation");
+                }
+            }
+            super::settings::SettingsAction::None => {}
+        }
     }
     
     fn show_screen_capture_tab(&mut self, ui: &mut egui::Ui) {
