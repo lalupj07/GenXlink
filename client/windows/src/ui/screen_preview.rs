@@ -116,25 +116,39 @@ impl ScreenPreviewPanel {
             
             let frame_data = self.frame_data.clone();
             
+            // Spawn capture task
             tokio::spawn(async move {
+                tracing::info!("Starting screen capture...");
+                
                 match ScreenCapturer::new(config) {
                     Ok(capturer) => {
-                        tracing::info!("Screen capturer initialized");
+                        tracing::info!("Screen capturer initialized successfully");
                         
-                        if let Err(e) = capturer.start_capture(move |frame| {
-                            // Update frame data
-                            let frame_data_clone = frame_data.clone();
+                        // Start capture with callback
+                        let result = capturer.start_capture(move |frame| {
+                            // Clone for async block
+                            let frame_data = frame_data.clone();
+                            let width = frame.width;
+                            let height = frame.height;
+                            let data = frame.data.clone();
+                            let timestamp = frame.timestamp;
+                            
+                            // Spawn async task to update frame data
                             tokio::spawn(async move {
-                                let mut data = frame_data_clone.lock().await;
-                                *data = Some(FrameData {
-                                    width: frame.width,
-                                    height: frame.height,
-                                    data: frame.data,
-                                    timestamp: frame.timestamp,
-                                });
+                                if let Ok(mut frame_guard) = frame_data.try_lock() {
+                                    *frame_guard = Some(FrameData {
+                                        width,
+                                        height,
+                                        data,
+                                        timestamp,
+                                    });
+                                }
                             });
+                            
                             Ok(())
-                        }).await {
+                        }).await;
+                        
+                        if let Err(e) = result {
                             tracing::error!("Capture error: {}", e);
                         }
                     }
