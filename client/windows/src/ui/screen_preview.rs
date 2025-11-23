@@ -311,15 +311,18 @@ impl ScreenPreviewPanel {
                 tracing::info!("Video encoder created successfully");
                 let encoder_arc = Arc::new(encoder);
                 
-                // Start recording
+                // Start recording in a thread with its own runtime
                 let encoder_clone = encoder_arc.clone();
-                tokio::spawn(async move {
-                    tracing::info!("Starting encoder async task");
-                    if let Err(e) = encoder_clone.start_recording().await {
-                        tracing::error!("Failed to start recording: {}", e);
-                    } else {
-                        tracing::info!("Encoder started successfully");
-                    }
+                std::thread::spawn(move || {
+                    let rt = tokio::runtime::Runtime::new().unwrap();
+                    rt.block_on(async move {
+                        tracing::info!("Starting encoder async task");
+                        if let Err(e) = encoder_clone.start_recording().await {
+                            tracing::error!("Failed to start recording: {}", e);
+                        } else {
+                            tracing::info!("Encoder started successfully");
+                        }
+                    });
                 });
                 
                 // Set the encoder in the shared mutex
@@ -349,15 +352,18 @@ impl ScreenPreviewPanel {
         // Take encoder from shared mutex
         if let Ok(mut encoder_guard) = self.video_encoder.try_lock() {
             if let Some(encoder) = encoder_guard.take() {
-                tokio::spawn(async move {
-                    match encoder.stop_recording().await {
-                        Ok(path) => {
-                            tracing::info!("Recording saved to: {}", path.display());
+                std::thread::spawn(move || {
+                    let rt = tokio::runtime::Runtime::new().unwrap();
+                    rt.block_on(async move {
+                        match encoder.stop_recording().await {
+                            Ok(path) => {
+                                tracing::info!("Recording saved to: {}", path.display());
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to stop recording: {}", e);
+                            }
                         }
-                        Err(e) => {
-                            tracing::error!("Failed to stop recording: {}", e);
-                        }
-                    }
+                    });
                 });
             }
         }
