@@ -1,3 +1,7 @@
+// Copyright (c) 2025 GenXis Innovations
+// Licensed under the Apache License, Version 2.0
+// Contact: genxisinnovation@outlook.com
+
 pub mod capture;
 pub mod encoder;
 pub mod input;
