@@ -163,6 +163,8 @@ impl ScreenPreviewPanel {
                                             if let Err(e) = encoder.encode_frame(&frame_data_clone).await {
                                                 tracing::error!("Failed to encode frame: {}", e);
                                             }
+                                        } else {
+                                            // This is normal - encoder not set yet or recording stopped
                                         }
                                     }
                                 });
@@ -256,7 +258,16 @@ impl ScreenPreviewPanel {
     }
     
     pub fn start_recording(&mut self) {
-        if self.is_recording || !self.is_capturing {
+        tracing::info!("start_recording called - is_recording: {}, is_capturing: {}", 
+            self.is_recording, self.is_capturing);
+        
+        if self.is_recording {
+            tracing::warn!("Already recording, ignoring");
+            return;
+        }
+        
+        if !self.is_capturing {
+            tracing::warn!("Not capturing, cannot start recording");
             return;
         }
         
@@ -292,27 +303,37 @@ impl ScreenPreviewPanel {
         };
         
         // Create encoder
-        match VideoEncoder::new(config, filepath) {
+        tracing::info!("Creating video encoder: {}x{} @ {} fps, output: {}", 
+            width, height, 30, filepath.display());
+        
+        match VideoEncoder::new(config, filepath.clone()) {
             Ok(encoder) => {
+                tracing::info!("Video encoder created successfully");
                 let encoder_arc = Arc::new(encoder);
                 
                 // Start recording
                 let encoder_clone = encoder_arc.clone();
                 tokio::spawn(async move {
+                    tracing::info!("Starting encoder async task");
                     if let Err(e) = encoder_clone.start_recording().await {
                         tracing::error!("Failed to start recording: {}", e);
+                    } else {
+                        tracing::info!("Encoder started successfully");
                     }
                 });
                 
                 // Set the encoder in the shared mutex
                 if let Ok(mut encoder_guard) = self.video_encoder.try_lock() {
                     *encoder_guard = Some(encoder_arc);
+                    tracing::info!("Encoder set in shared mutex");
+                } else {
+                    tracing::error!("Failed to lock encoder mutex");
                 }
                 
                 self.is_recording = true;
                 self.recording_start_time = Some(std::time::Instant::now());
                 
-                tracing::info!("Recording started");
+                tracing::info!("Recording started - file will be saved to: {}", filepath.display());
             }
             Err(e) => {
                 tracing::error!("Failed to create video encoder: {}", e);
