@@ -11,12 +11,14 @@ COPY client ./client
 COPY server ./server
 COPY shared ./shared
 
-# Build only the server package
+# Build only the server package (cache bust: v2)
 RUN cargo build --release --package genxlink-server && \
     echo "=== Listing ALL files in target/release ===" && \
     ls -lah /app/target/release/ && \
     echo "=== Searching for executables ===" && \
     find /app/target/release -maxdepth 1 -type f -executable && \
+    echo "=== Trying to find genxlink* ===" && \
+    find /app/target/release -maxdepth 1 -name "genxlink*" && \
     echo "====================="
 
 # Runtime stage
