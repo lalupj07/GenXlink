@@ -21,8 +21,10 @@ bytes = "1.5"
 # Video encoding
 openh264 = "0.6"  # H.264 encoding
 yuv = "0.1"       # YUV color space conversion
+mp4 = "0.14"      # MP4 container
 rand = "0.8"      # Random number generation for SSRC
 uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { workspace = true }
 
 # GenXLink dependencies
 genxlink-protocol = { path = "../../shared/protocol" }

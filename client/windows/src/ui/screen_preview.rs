@@ -23,6 +23,11 @@ pub struct ScreenPreviewPanel {
     
     /// Last screenshot message
     last_screenshot_msg: Option<String>,
+    
+    /// Recording status
+    is_recording: bool,
+    recording_start_time: Option<std::time::Instant>,
+    video_encoder: Option<Arc<genxlink_client_core::video_encoder::VideoEncoder>>,
 }
 
 #[derive(Clone)]
@@ -61,6 +66,9 @@ impl ScreenPreviewPanel {
             fps: 0.0,
             last_frame_time: std::time::Instant::now(),
             last_screenshot_msg: None,
+            is_recording: false,
+            recording_start_time: None,
+            video_encoder: None,
         }
     }
     
@@ -120,6 +128,7 @@ impl ScreenPreviewPanel {
             };
             
             let frame_data = self.frame_data.clone();
+            let video_encoder = self.video_encoder.clone();
             
             // Spawn capture thread (not using tokio since we're in egui context)
             std::thread::spawn(move || {
@@ -142,6 +151,17 @@ impl ScreenPreviewPanel {
                                         height: frame.height,
                                         data: frame.data.clone(),
                                         timestamp: frame.timestamp,
+                                    });
+                                }
+                                
+                                // Encode frame if recording
+                                if let Some(encoder) = &video_encoder {
+                                    let encoder_clone = encoder.clone();
+                                    let frame_data = frame.data.clone();
+                                    tokio::spawn(async move {
+                                        if let Err(e) = encoder_clone.encode_frame(&frame_data).await {
+                                            tracing::error!("Failed to encode frame: {}", e);
+                                        }
                                     });
                                 }
                                 
@@ -233,6 +253,89 @@ impl ScreenPreviewPanel {
         Ok(filepath)
     }
     
+    pub fn start_recording(&mut self) {
+        if self.is_recording || !self.is_capturing {
+            return;
+        }
+        
+        use genxlink_client_core::video_encoder::{VideoEncoder, VideoEncoderConfig};
+        use chrono::Local;
+        
+        // Get current frame dimensions
+        let (width, height) = if let Ok(frame_guard) = self.frame_data.try_lock() {
+            if let Some(frame) = frame_guard.as_ref() {
+                (frame.width, frame.height)
+            } else {
+                (1920, 1080) // Default
+            }
+        } else {
+            (1920, 1080) // Default
+        };
+        
+        // Create output path
+        let docs_dir = dirs::document_dir().unwrap_or_else(|| PathBuf::from("."));
+        let captures_dir = docs_dir.join("GenXLink Captures");
+        std::fs::create_dir_all(&captures_dir).ok();
+        
+        let timestamp = Local::now().format("%Y-%m-%d_%H-%M-%S");
+        let filename = format!("recording_{}.raw", timestamp);
+        let filepath = captures_dir.join(filename);
+        
+        // Create encoder config
+        let config = VideoEncoderConfig {
+            width,
+            height,
+            fps: 30,
+            bitrate: 5_000_000, // 5 Mbps
+        };
+        
+        // Create encoder
+        match VideoEncoder::new(config, filepath) {
+            Ok(encoder) => {
+                let encoder_arc = Arc::new(encoder);
+                
+                // Start recording
+                let encoder_clone = encoder_arc.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = encoder_clone.start_recording().await {
+                        tracing::error!("Failed to start recording: {}", e);
+                    }
+                });
+                
+                self.video_encoder = Some(encoder_arc);
+                self.is_recording = true;
+                self.recording_start_time = Some(std::time::Instant::now());
+                
+                tracing::info!("Recording started");
+            }
+            Err(e) => {
+                tracing::error!("Failed to create video encoder: {}", e);
+            }
+        }
+    }
+    
+    pub fn stop_recording(&mut self) {
+        if !self.is_recording {
+            return;
+        }
+        
+        if let Some(encoder) = self.video_encoder.take() {
+            tokio::spawn(async move {
+                match encoder.stop_recording().await {
+                    Ok(path) => {
+                        tracing::info!("Recording saved to: {}", path.display());
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to stop recording: {}", e);
+                    }
+                }
+            });
+        }
+        
+        self.is_recording = false;
+        self.recording_start_time = None;
+    }
+    
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("📺 Screen Preview");
         ui.add_space(10.0);
@@ -286,6 +389,27 @@ impl ScreenPreviewPanel {
                 }
             }
         });
+        
+        // Recording controls
+        if self.is_capturing {
+            ui.horizontal(|ui| {
+                if self.is_recording {
+                    if ui.button("⏺ Stop Recording").clicked() {
+                        self.stop_recording();
+                    }
+                    
+                    // Show recording duration
+                    if let Some(start_time) = self.recording_start_time {
+                        let duration = start_time.elapsed().as_secs();
+                        ui.label(format!("🔴 Recording: {}:{:02}", duration / 60, duration % 60));
+                    }
+                } else {
+                    if ui.button("⏺ Start Recording").clicked() {
+                        self.start_recording();
+                    }
+                }
+            });
+        }
         
         // Show screenshot message
         if let Some(msg) = &self.last_screenshot_msg {
