@@ -116,46 +116,42 @@ impl ScreenPreviewPanel {
             
             let frame_data = self.frame_data.clone();
             
-            // Spawn capture task
-            tokio::spawn(async move {
+            // Spawn capture thread (not using tokio since we're in egui context)
+            std::thread::spawn(move || {
                 tracing::info!("Starting screen capture...");
                 
-                match ScreenCapturer::new(config) {
-                    Ok(capturer) => {
-                        tracing::info!("Screen capturer initialized successfully");
-                        
-                        // Start capture with callback
-                        let result = capturer.start_capture(move |frame| {
-                            // Clone for async block
-                            let frame_data = frame_data.clone();
-                            let width = frame.width;
-                            let height = frame.height;
-                            let data = frame.data.clone();
-                            let timestamp = frame.timestamp;
+                // Create a simple runtime for the capture
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                
+                rt.block_on(async move {
+                    match ScreenCapturer::new(config) {
+                        Ok(capturer) => {
+                            tracing::info!("Screen capturer initialized successfully");
                             
-                            // Spawn async task to update frame data
-                            tokio::spawn(async move {
+                            // Start capture with callback
+                            let result = capturer.start_capture(move |frame| {
+                                // Update frame data synchronously
                                 if let Ok(mut frame_guard) = frame_data.try_lock() {
                                     *frame_guard = Some(FrameData {
-                                        width,
-                                        height,
-                                        data,
-                                        timestamp,
+                                        width: frame.width,
+                                        height: frame.height,
+                                        data: frame.data.clone(),
+                                        timestamp: frame.timestamp,
                                     });
                                 }
-                            });
+                                
+                                Ok(())
+                            }).await;
                             
-                            Ok(())
-                        }).await;
-                        
-                        if let Err(e) = result {
-                            tracing::error!("Capture error: {}", e);
+                            if let Err(e) = result {
+                                tracing::error!("Capture error: {}", e);
+                            }
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to create screen capturer: {}", e);
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to create screen capturer: {}", e);
-                    }
-                }
+                });
             });
         }
         
