@@ -1,6 +1,7 @@
 use eframe::egui;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use std::path::PathBuf;
 
 /// Screen preview panel for displaying captured frames
 pub struct ScreenPreviewPanel {
@@ -19,6 +20,9 @@ pub struct ScreenPreviewPanel {
     /// FPS counter
     fps: f32,
     last_frame_time: std::time::Instant,
+    
+    /// Last screenshot message
+    last_screenshot_msg: Option<String>,
 }
 
 #[derive(Clone)]
@@ -56,6 +60,7 @@ impl ScreenPreviewPanel {
             is_capturing: false,
             fps: 0.0,
             last_frame_time: std::time::Instant::now(),
+            last_screenshot_msg: None,
         }
     }
     
@@ -166,6 +171,68 @@ impl ScreenPreviewPanel {
         // TODO: Send stop signal to capture thread
     }
     
+    pub fn save_screenshot(&mut self) {
+        let frame_data = self.frame_data.clone();
+        
+        // Spawn thread to save screenshot
+        std::thread::spawn(move || {
+            if let Ok(frame_guard) = frame_data.try_lock() {
+                if let Some(frame) = frame_guard.as_ref() {
+                    match Self::save_frame_to_file(frame) {
+                        Ok(path) => {
+                            tracing::info!("Screenshot saved to: {}", path.display());
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to save screenshot: {}", e);
+                        }
+                    }
+                } else {
+                    tracing::warn!("No frame data available to save");
+                }
+            }
+        });
+        
+        self.last_screenshot_msg = Some("Screenshot saved!".to_string());
+    }
+    
+    fn save_frame_to_file(frame: &FrameData) -> anyhow::Result<PathBuf> {
+        use image::{ImageBuffer, Rgba};
+        use chrono::Local;
+        
+        // Get Documents folder
+        let docs_dir = dirs::document_dir()
+            .ok_or_else(|| anyhow::anyhow!("Could not find Documents folder"))?;
+        
+        // Create GenXLink Captures directory
+        let captures_dir = docs_dir.join("GenXLink Captures");
+        std::fs::create_dir_all(&captures_dir)?;
+        
+        // Generate filename with timestamp
+        let timestamp = Local::now().format("%Y-%m-%d_%H-%M-%S");
+        let filename = format!("screenshot_{}.png", timestamp);
+        let filepath = captures_dir.join(filename);
+        
+        // Convert BGRA to RGBA
+        let mut rgba_data = Vec::with_capacity(frame.data.len());
+        for chunk in frame.data.chunks_exact(4) {
+            rgba_data.push(chunk[2]); // R
+            rgba_data.push(chunk[1]); // G
+            rgba_data.push(chunk[0]); // B
+            rgba_data.push(chunk[3]); // A
+        }
+        
+        // Create image and save
+        let img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_raw(
+            frame.width,
+            frame.height,
+            rgba_data,
+        ).ok_or_else(|| anyhow::anyhow!("Failed to create image buffer"))?;
+        
+        img.save(&filepath)?;
+        
+        Ok(filepath)
+    }
+    
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         ui.heading("📺 Screen Preview");
         ui.add_space(10.0);
@@ -208,12 +275,31 @@ impl ScreenPreviewPanel {
                 }
                 
                 ui.label(format!("🎥 Capturing at {:.1} FPS", self.fps));
+                
+                // Screenshot button
+                if ui.button("📸 Take Screenshot").clicked() {
+                    self.save_screenshot();
+                }
             } else {
                 if ui.button("▶️ Start Capture").clicked() {
                     self.start_capture();
                 }
             }
         });
+        
+        // Show screenshot message
+        if let Some(msg) = &self.last_screenshot_msg {
+            ui.label(egui::RichText::new(msg).color(egui::Color32::GREEN));
+            
+            // Clear message after 3 seconds
+            let msg_clone = self.last_screenshot_msg.clone();
+            if msg_clone.is_some() {
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                });
+                // Message will be cleared on next frame
+            }
+        }
         
         ui.add_space(10.0);
         ui.separator();
