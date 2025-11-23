@@ -16,6 +16,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 env_logger = "0.11"
 postgrest = "1.4"
 anyhow = "1.0"
+jsonwebtoken = "9.2"
+bcrypt = "0.15"
+actix-web-httpauth = "0.8"
 
 [dependencies.genxlink-protocol]
 path = "../shared/protocol"
