@@ -226,11 +226,11 @@ impl SettingsPanel {
                 });
 
                 // About Section
-                ui.vertical(|ui| {
+                ui.vertical_centered(|ui| {
+                    ui.heading("ℹ️ About");
+                    ui.add_space(8.0);
+                    
                     ui.vertical_centered(|ui| {
-                        ui.heading("ℹ️ About");
-                        ui.add_space(8.0);
-                        
                         ui.label(egui::RichText::new("🚀 GenXLink")
                             .size(14.0)
                             .strong());
