@@ -186,310 +186,57 @@ impl GenXLinkApp {
 
 impl eframe::App for GenXLinkApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Material Design top panel with tabs
+        // Top panel with tabs
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::Frame::none()
-                .fill(egui::Color32::from_rgb(255, 255, 255))
-                .shadow(egui::epaint::Shadow {
-                    offset: egui::vec2(0.0, 2.0),
-                    blur: 8.0,
-                    spread: 0.0,
-                    color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-                })
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.add_space(16.0);
-                        
-                        // Material Design app title
-                        ui.label(egui::RichText::new("🚀 GenXLink")
-                            .size(20.0)
-                            .strong()
-                            .color(egui::Color32::from_rgb(63, 81, 181)));
-                        
-                        ui.add_space(24.0);
-                        
-                        // Material Design tab buttons
-                        let tab_style = |active: bool| {
-                            if active {
-                                egui::Button::new(
-                                    egui::RichText::new("")
-                                        .color(egui::Color32::from_rgb(63, 81, 181))
-                                        .size(13.0)
-                                        .strong()
-                                )
-                                    .fill(egui::Color32::from_rgb(232, 240, 254))
-                                    .rounding(egui::Rounding::same(8.0))
-                                    .min_size(egui::vec2(120.0, 36.0))
-                            } else {
-                                egui::Button::new(
-                                    egui::RichText::new("")
-                                        .color(egui::Color32::from_rgb(97, 97, 97))
-                                        .size(13.0)
-                                )
-                                    .fill(egui::Color32::TRANSPARENT)
-                                    .rounding(egui::Rounding::same(8.0))
-                                    .min_size(egui::vec2(120.0, 36.0))
-                            }
-                        };
-                        
-                        // Devices tab
-                        let devices_tab = if self.current_tab == Tab::Devices {
-                            egui::Button::new(
-                                egui::RichText::new("📱 Devices")
-                                    .color(egui::Color32::from_rgb(63, 81, 181))
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(232, 240, 254))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        } else {
-                            egui::Button::new(
-                                egui::RichText::new("📱 Devices")
-                                    .color(egui::Color32::from_rgb(97, 97, 97))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        };
-                        
-                        if ui.add(devices_tab).clicked() {
-                            self.current_tab = Tab::Devices;
-                        }
-                        
-                        ui.add_space(4.0);
-                        
-                        // Screen Capture tab
-                        let screen_capture_tab = if self.current_tab == Tab::ScreenCapture {
-                            egui::Button::new(
-                                egui::RichText::new("📺 Screen Capture")
-                                    .color(egui::Color32::from_rgb(63, 81, 181))
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(232, 240, 254))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        } else {
-                            egui::Button::new(
-                                egui::RichText::new("📺 Screen Capture")
-                                    .color(egui::Color32::from_rgb(97, 97, 97))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        };
-                        
-                        if ui.add(screen_capture_tab).clicked() {
-                            self.current_tab = Tab::ScreenCapture;
-                        }
-                        
-                        ui.add_space(4.0);
-                        
-                        // Streaming tab
-                        let streaming_tab = if self.current_tab == Tab::Streaming {
-                            egui::Button::new(
-                                egui::RichText::new("🌐 Streaming")
-                                    .color(egui::Color32::from_rgb(63, 81, 181))
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(232, 240, 254))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        } else {
-                            egui::Button::new(
-                                egui::RichText::new("🌐 Streaming")
-                                    .color(egui::Color32::from_rgb(97, 97, 97))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        };
-                        
-                        if ui.add(streaming_tab).clicked() {
-                            self.current_tab = Tab::Streaming;
-                        }
-                        
-                        ui.add_space(4.0);
-                        
-                        // History tab
-                        let history_tab = if self.current_tab == Tab::History {
-                            egui::Button::new(
-                                egui::RichText::new("📜 History")
-                                    .color(egui::Color32::from_rgb(63, 81, 181))
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(232, 240, 254))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        } else {
-                            egui::Button::new(
-                                egui::RichText::new("📜 History")
-                                    .color(egui::Color32::from_rgb(97, 97, 97))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        };
-                        
-                        if ui.add(history_tab).clicked() {
-                            self.current_tab = Tab::History;
-                        }
-                        
-                        ui.add_space(4.0);
-                        
-                        // Settings tab
-                        let settings_tab = if self.current_tab == Tab::Settings {
-                            egui::Button::new(
-                                egui::RichText::new("⚙ Settings")
-                                    .color(egui::Color32::from_rgb(63, 81, 181))
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(232, 240, 254))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        } else {
-                            egui::Button::new(
-                                egui::RichText::new("⚙ Settings")
-                                    .color(egui::Color32::from_rgb(97, 97, 97))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        };
-                        
-                        if ui.add(settings_tab).clicked() {
-                            self.current_tab = Tab::Settings;
-                        }
-                        
-                        ui.add_space(4.0);
-                        
-                        // Premium tab
-                        let premium_tab = if self.current_tab == Tab::Premium {
-                            egui::Button::new(
-                                egui::RichText::new("🌟 Premium")
-                                    .color(egui::Color32::from_rgb(63, 81, 181))
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(232, 240, 254))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        } else {
-                            egui::Button::new(
-                                egui::RichText::new("🌟 Premium")
-                                    .color(egui::Color32::from_rgb(97, 97, 97))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        };
-                        
-                        if ui.add(premium_tab).clicked() {
-                            self.current_tab = Tab::Premium;
-                        }
-                        
-                        ui.add_space(16.0);
-                    });
-                    ui.add_space(12.0);
-                });
+            ui.horizontal(|ui| {
+                ui.heading("GenXLink");
+                
+                ui.separator();
+                
+                ui.selectable_value(&mut self.current_tab, Tab::Devices, "📱 Devices");
+                ui.selectable_value(&mut self.current_tab, Tab::ScreenCapture, "📺 Screen Capture");
+                ui.selectable_value(&mut self.current_tab, Tab::Streaming, "🌐 WebRTC Streaming");
+                ui.selectable_value(&mut self.current_tab, Tab::History, "📜 History");
+                ui.selectable_value(&mut self.current_tab, Tab::Settings, "⚙ Settings");
+                ui.selectable_value(&mut self.current_tab, Tab::Premium, "🌟 Premium");
+            });
         });
         
-        // Material Design bottom panel with status
+        // Bottom panel with status
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
-            egui::Frame::none()
-                .fill(egui::Color32::from_rgb(248, 249, 250))
-                .shadow(egui::epaint::Shadow {
-                    offset: egui::vec2(0.0, -1.0),
-                    blur: 4.0,
-                    spread: 0.0,
-                    color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 8),
-                })
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.add_space(16.0);
-                        
-                        // Material Design status display
-                        match &self.state {
-                            AppState::Ready => {
-                                ui.label(egui::RichText::new("● Ready")
-                                    .size(12.0)
-                                    .color(egui::Color32::from_rgb(76, 175, 80)));
-                            }
-                            AppState::Connecting(device) => {
-                                ui.spinner();
-                                ui.label(egui::RichText::new(format!("◐ Connecting to {}...", device))
-                                    .size(12.0)
-                                    .color(egui::Color32::from_rgb(255, 152, 0)));
-                            }
-                            AppState::Connected(device) => {
-                                ui.label(egui::RichText::new(format!("● Connected to {}", device))
-                                    .size(12.0)
-                                    .color(egui::Color32::from_rgb(76, 175, 80)));
-                            }
-                            AppState::Error(msg) => {
-                                ui.label(egui::RichText::new(format!("● {}", msg))
-                                    .size(12.0)
-                                    .color(egui::Color32::from_rgb(244, 67, 54)));
-                            }
-                        }
-                        
-                        ui.add_space(24.0);
-                        
-                        // Material Design separator
-                        ui.add(egui::Separator::default().horizontal());
-                        
-                        ui.add_space(24.0);
-                        
-                        // Material Design device ID
-                        ui.label(egui::RichText::new("🔗 Device ID:")
-                            .size(12.0)
-                            .color(egui::Color32::from_rgb(117, 117, 117)));
-                        ui.label(egui::RichText::new(self.device_id.0.chars().take(8).collect::<String>())
-                            .size(12.0)
-                            .strong()
-                            .color(egui::Color32::from_rgb(33, 33, 33)));
-                        
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            ui.add_space(16.0);
-                        });
-                    });
-                    ui.add_space(8.0);
-                });
+            ui.horizontal(|ui| {
+                match &self.state {
+                    AppState::Ready => {
+                        ui.label("Status: Ready");
+                    }
+                    AppState::Connecting(device) => {
+                        ui.spinner();
+                        ui.label(format!("Connecting to {}...", device));
+                    }
+                    AppState::Connected(device) => {
+                        ui.label(format!("✓ Connected to {}", device));
+                    }
+                    AppState::Error(msg) => {
+                        ui.colored_label(egui::Color32::from_rgb(239, 68, 68), format!("⚠ {}", msg));
+                    }
+                }
+                
+                ui.separator();
+                
+                ui.label(format!("Device ID: {}", self.device_id.0.chars().take(8).collect::<String>()));
+            });
         });
         
-        // Material Design central panel with content
+        // Central panel with content
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::Frame::none()
-                .fill(egui::Color32::from_rgb(250, 250, 250))
-                .show(ui, |ui| {
-                    ui.add_space(16.0);
-                    ui.horizontal(|ui| {
-                        ui.add_space(16.0);
-                        
-                        // Material Design content area
-                        match self.current_tab {
-                            Tab::Devices => self.show_devices_tab(ui),
-                            Tab::ScreenCapture => self.show_screen_capture_tab(ui),
-                            Tab::Streaming => self.show_streaming_tab(ui),
-                            Tab::History => self.show_history_tab(ui),
-                            Tab::Settings => self.show_settings_tab(ui),
-                            Tab::Premium => self.show_premium_tab(ui),
-                        }
-                        
-                        ui.add_space(16.0);
-                    });
-                    ui.add_space(16.0);
-                });
+            match self.current_tab {
+                Tab::Devices => self.show_devices_tab(ui),
+                Tab::ScreenCapture => self.show_screen_capture_tab(ui),
+                Tab::Streaming => self.show_streaming_tab(ui),
+                Tab::History => self.show_history_tab(ui),
+                Tab::Settings => self.show_settings_tab(ui),
+                Tab::Premium => self.show_premium_tab(ui),
+            }
         });
         
         // Show connection dialog
@@ -517,290 +264,99 @@ impl eframe::App for GenXLinkApp {
 
 impl GenXLinkApp {
     fn show_devices_tab(&mut self, ui: &mut egui::Ui) {
-        // Material Design devices header
-        egui::Frame::none()
-            .fill(egui::Color32::from_rgb(255, 255, 255))
-            .rounding(egui::Rounding::same(12.0))
-            .shadow(egui::epaint::Shadow {
-                offset: egui::vec2(0.0, 2.0),
-                blur: 8.0,
-                spread: 0.0,
-                color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-            })
-            .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.add_space(16.0);
-                    
-                    ui.label(egui::RichText::new("📱 Available Devices")
-                        .size(18.0)
-                        .strong()
-                        .color(egui::Color32::from_rgb(33, 33, 33)));
-                    
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.add_space(16.0);
-                        
-                        if ui.add(
-                            egui::Button::new(
-                                egui::RichText::new("➕ Connect to Device")
-                                    .color(egui::Color32::WHITE)
-                                    .size(13.0)
-                                    .strong()
-                            )
-                                .fill(egui::Color32::from_rgb(63, 81, 181))
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(160.0, 36.0))
-                        ).clicked() {
-                            // Show connection dialog
-                            if let Some(ref mut dialog) = self.connection_dialog {
-                                dialog.show_dialog();
-                            }
-                        }
-                    });
-                });
-                ui.add_space(16.0);
+        ui.horizontal(|ui| {
+            ui.heading("Available Devices");
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("➕ Connect to Device").clicked() {
+                    // Show connection dialog
+                    if let Some(ref mut dialog) = self.connection_dialog {
+                        dialog.show_dialog();
+                    }
+                }
             });
+        });
+        ui.add_space(10.0);
         
-        ui.add_space(16.0);
-        
-        // Material Design devices list
         egui::ScrollArea::vertical().show(ui, |ui| {
             for device in &self.devices {
                 self.show_device_card(ui, device);
-                ui.add_space(12.0);
+                ui.add_space(5.0);
             }
             
             if self.devices.is_empty() {
-                egui::Frame::none()
-                    .fill(egui::Color32::from_rgb(255, 255, 255))
-                    .rounding(egui::Rounding::same(12.0))
-                    .shadow(egui::epaint::Shadow {
-                        offset: egui::vec2(0.0, 2.0),
-                        blur: 8.0,
-                        spread: 0.0,
-                        color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-                    })
-                    .show(ui, |ui| {
-                        ui.vertical_centered(|ui| {
-                            ui.add_space(40.0);
-                            
-                            ui.label(egui::RichText::new("📱")
-                                .size(48.0)
-                                .color(egui::Color32::from_rgb(189, 189, 189)));
-                            
-                            ui.add_space(16.0);
-                            
-                            ui.label(egui::RichText::new("No devices found")
-                                .size(16.0)
-                                .strong()
-                                .color(egui::Color32::from_rgb(117, 117, 117)));
-                            
-                            ui.add_space(8.0);
-                            
-                            ui.label(egui::RichText::new("Devices will appear here when they come online")
-                                .size(13.0)
-                                .color(egui::Color32::from_rgb(158, 158, 158)));
-                            
-                            ui.add_space(24.0);
-                            
-                            if ui.add(
-                                egui::Button::new(
-                                    egui::RichText::new("➕ Connect to Device Manually")
-                                        .color(egui::Color32::WHITE)
-                                        .size(13.0)
-                                        .strong()
-                                )
-                                    .fill(egui::Color32::from_rgb(63, 81, 181))
-                                    .rounding(egui::Rounding::same(8.0))
-                                    .min_size(egui::vec2(200.0, 36.0))
-                            ).clicked() {
-                                if let Some(ref mut dialog) = self.connection_dialog {
-                                    dialog.show_dialog();
-                                }
-                            }
-                            
-                            ui.add_space(40.0);
-                        });
-                    });
+                ui.vertical_centered(|ui| {
+                    ui.add_space(50.0);
+                    ui.label("No devices found");
+                    ui.label("Devices will appear here when they come online");
+                    ui.add_space(10.0);
+                    if ui.button("➕ Connect to Device Manually").clicked() {
+                        if let Some(ref mut dialog) = self.connection_dialog {
+                            dialog.show_dialog();
+                        }
+                    }
+                });
             }
         });
     }
     
     fn show_device_card(&self, ui: &mut egui::Ui, device: &DeviceInfo) {
-        egui::Frame::none()
-            .fill(egui::Color32::from_rgb(255, 255, 255))
-            .rounding(egui::Rounding::same(12.0))
-            .shadow(egui::epaint::Shadow {
-                offset: egui::vec2(0.0, 2.0),
-                blur: 8.0,
-                spread: 0.0,
-                color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-            })
+        egui::Frame::group(ui.style())
+            .inner_margin(10.0)
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
-                    ui.add_space(16.0);
-                    
                     // Device icon
-                    ui.label(egui::RichText::new(Self::device_icon(device.device_type))
-                        .size(32.0));
+                    ui.label(egui::RichText::new(Self::device_icon(device.device_type)).size(32.0));
                     
-                    ui.add_space(16.0);
+                    ui.add_space(10.0);
                     
                     // Device info
                     ui.vertical(|ui| {
-                        ui.label(egui::RichText::new(&device.name)
-                            .size(16.0)
-                            .strong()
-                            .color(egui::Color32::from_rgb(33, 33, 33)));
-                        
-                        ui.add_space(4.0);
+                        ui.heading(&device.name);
                         
                         ui.horizontal(|ui| {
                             let (indicator, color) = Self::status_indicator(device.status);
-                            ui.label(egui::RichText::new(indicator)
-                                .size(12.0)
-                                .color(color));
-                            
-                            ui.add_space(8.0);
-                            
-                            ui.label(egui::RichText::new(&device.ip_address)
-                                .size(12.0)
-                                .color(egui::Color32::from_rgb(117, 117, 117)));
+                            ui.colored_label(color, indicator);
+                            ui.label(&device.ip_address);
                             
                             if let Some(last_seen) = device.last_seen {
                                 let duration = chrono::Utc::now() - last_seen;
-                                let time_text = if duration.num_minutes() < 1 {
-                                    "Just now".to_string()
+                                if duration.num_minutes() < 1 {
+                                    ui.label("• Just now");
                                 } else if duration.num_hours() < 1 {
-                                    format!("{} min ago", duration.num_minutes())
+                                    ui.label(format!("• {} min ago", duration.num_minutes()));
                                 } else {
-                                    format!("{} hours ago", duration.num_hours())
-                                };
-                                
-                                ui.add_space(8.0);
-                                ui.label(egui::RichText::new(format!("• {}", time_text))
-                                    .size(11.0)
-                                    .color(egui::Color32::from_rgb(158, 158, 158)));
+                                    ui.label(format!("• {} hours ago", duration.num_hours()));
+                                }
                             }
                         });
                     });
                     
-                    // Spacer and connect button
+                    // Spacer
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.add_space(16.0);
-                        
                         if device.status == DeviceStatus::Online {
-                            if ui.add(
-                                egui::Button::new(
-                                    egui::RichText::new("Connect")
-                                        .color(egui::Color32::WHITE)
-                                        .size(12.0)
-                                        .strong()
-                                )
-                                    .fill(egui::Color32::from_rgb(76, 175, 80))
-                                    .rounding(egui::Rounding::same(8.0))
-                                    .min_size(egui::vec2(80.0, 32.0))
-                            ).clicked() {
+                            if ui.button("Connect").clicked() {
                                 // Show connection dialog
                                 tracing::info!("Connect button clicked for: {}", device.name);
                                 // Note: This is immutable borrow, so we log for now
                                 // In a real implementation, we'd use message passing
                             }
                         } else {
-                            ui.add(
-                                egui::Button::new(
-                                    egui::RichText::new("Unavailable")
-                                        .color(egui::Color32::from_rgb(117, 117, 117))
-                                        .size(12.0)
-                                )
-                                    .fill(egui::Color32::from_rgb(245, 245, 245))
-                                    .rounding(egui::Rounding::same(8.0))
-                                    .min_size(egui::vec2(100.0, 32.0))
-                            );
+                            ui.add_enabled(false, egui::Button::new("Unavailable"));
                         }
                     });
-                    
-                    ui.add_space(16.0);
                 });
-                ui.add_space(16.0);
             });
     }
     
     fn show_history_tab(&mut self, ui: &mut egui::Ui) {
-        // Material Design history header
-        egui::Frame::none()
-            .fill(egui::Color32::from_rgb(255, 255, 255))
-            .rounding(egui::Rounding::same(12.0))
-            .shadow(egui::epaint::Shadow {
-                offset: egui::vec2(0.0, 2.0),
-                blur: 8.0,
-                spread: 0.0,
-                color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-            })
-            .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.add_space(16.0);
-                    
-                    ui.label(egui::RichText::new("📜 Connection History")
-                        .size(18.0)
-                        .strong()
-                        .color(egui::Color32::from_rgb(33, 33, 33)));
-                    
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.add_space(16.0);
-                        
-                        if ui.add(
-                            egui::Button::new(
-                                egui::RichText::new("🗑️ Clear History")
-                                    .color(egui::Color32::from_rgb(117, 117, 117))
-                                    .size(13.0)
-                            )
-                                .fill(egui::Color32::TRANSPARENT)
-                                .rounding(egui::Rounding::same(8.0))
-                                .min_size(egui::vec2(120.0, 36.0))
-                        ).clicked() {
-                            // Clear history logic
-                        }
-                    });
-                });
-                ui.add_space(16.0);
-            });
+        ui.heading("Connection History");
+        ui.add_space(10.0);
         
-        ui.add_space(16.0);
-        
-        // Material Design empty state
-        egui::Frame::none()
-            .fill(egui::Color32::from_rgb(255, 255, 255))
-            .rounding(egui::Rounding::same(12.0))
-            .shadow(egui::epaint::Shadow {
-                offset: egui::vec2(0.0, 2.0),
-                blur: 8.0,
-                spread: 0.0,
-                color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-            })
-            .show(ui, |ui| {
-                ui.vertical_centered(|ui| {
-                    ui.add_space(60.0);
-                    
-                    ui.label(egui::RichText::new("📜")
-                        .size(48.0)
-                        .color(egui::Color32::from_rgb(189, 189, 189)));
-                    
-                    ui.add_space(16.0);
-                    
-                    ui.label(egui::RichText::new("No connection history yet")
-                        .size(16.0)
-                        .strong()
-                        .color(egui::Color32::from_rgb(117, 117, 117)));
-                    
-                    ui.add_space(8.0);
-                    
-                    ui.label(egui::RichText::new("Your connection history will appear here")
-                        .size(13.0)
-                        .color(egui::Color32::from_rgb(158, 158, 158)));
-                    
-                    ui.add_space(60.0);
-                });
-            });
+        ui.vertical_centered(|ui| {
+            ui.add_space(50.0);
+            ui.label("No connection history yet");
+            ui.label("Your connection history will appear here");
+        });
     }
     
     fn show_settings_tab(&mut self, ui: &mut egui::Ui) {
