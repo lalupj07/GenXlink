@@ -18,7 +18,7 @@ impl StreamingPanel {
     pub fn new() -> Self {
         Self {
             session: Arc::new(Mutex::new(None)),
-            signaling_server_url: "ws://127.0.0.1:8081/ws".to_string(),
+            signaling_server_url: "ws://genxlink-signaling.onrender.com:443/ws".to_string(),
             remote_device_id: String::new(),
             selected_monitor: 0,
             session_state: SessionState::Idle,

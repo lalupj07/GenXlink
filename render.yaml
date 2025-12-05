@@ -1,0 +1,15 @@
+services:
+  # GenXLink Signaling Server
+  - type: web
+    name: genxlink-signaling
+    env: docker
+    dockerfilePath: ./server/signaling/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+    domains:
+      - genxlink-signaling.onrender.com
