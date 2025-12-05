@@ -6,7 +6,6 @@ use axum::{
 };
 use std::net::SocketAddr;
 use tracing::info;
-use futures::{sink::SinkExt, stream::StreamExt};
 
 #[tokio::main]
 async fn main() {
@@ -23,9 +22,7 @@ async fn main() {
         .route("/health", get(health_check));
     
     // Start server
-    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-    let port: u16 = port.parse().expect("PORT must be a number");
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8081));
     println!("🚀 GenXLink Signaling Server listening on {}", addr);
     println!("📡 WebSocket endpoint: ws://{}:{}/ws", addr.ip(), addr.port());
     println!("🔍 Health check: http://{}:{}/health", addr.ip(), addr.port());

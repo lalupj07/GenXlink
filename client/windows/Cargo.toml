@@ -33,3 +33,14 @@ image = { workspace = true }
 chrono = { workspace = true }
 dirs = "5.0"
 open = "5.0"
+
+# i18n and Localization
+i18n-embed = { version = "0.13", features = ["fluent-system", "desktop-requester"] }
+i18n-embed-fl = "0.7"
+fluent = "0.16"
+fluent-langneg = "0.13"
+lazy_static = "1.4"
+unic-langid = { version = "0.9", features = ["macros"] }
+
+# Configuration
+notify = { version = "6.0", features = ["serde"] }

@@ -9,11 +9,16 @@ use tokio::sync::{Mutex, mpsc};
 use tokio::time::{interval, Duration};
 
 /// Video capture and streaming pipeline
+use std::collections::VecDeque;
+use tokio::sync::mpsc;
+
 pub struct VideoPipeline {
     capture: Arc<Mutex<Box<dyn ScreenCapture>>>,
     streaming: Arc<Mutex<StreamingPipeline>>,
     frame_rate: u32,
     running: Arc<Mutex<bool>>,
+    frame_sender: Option<mpsc::Sender<Frame>>,
+    frame_buffer_size: usize,
 }
 
 impl VideoPipeline {
@@ -30,97 +35,127 @@ impl VideoPipeline {
             streaming: Arc::new(Mutex::new(streaming)),
             frame_rate,
             running: Arc::new(Mutex::new(false)),
+            frame_sender: None,
+            frame_buffer_size: 5, // Default buffer size of 5 frames
         })
     }
 
     /// Start the streaming pipeline
     pub async fn start(&self) -> Result<(), ClientError> {
-        let mut running = self.running.lock().await;
-        if *running {
-            return Err(ClientError::StreamingError("Pipeline already running".to_string()));
+        if self.frame_sender.is_some() {
+            return Err(ClientError::new("Pipeline already started"));
         }
-        *running = true;
-        drop(running);
 
-        let capture = Arc::clone(&self.capture);
-        let streaming = Arc::clone(&self.streaming);
-        let running = Arc::clone(&self.running);
-        let frame_interval = Duration::from_millis(1000 / self.frame_rate as u64);
-
-        // Spawn streaming task
+        // Create channel for frame buffering
+        let (tx, mut rx) = mpsc::channel(self.frame_buffer_size);
+        
+        let capture = self.capture.clone();
+        let streaming = self.streaming.clone();
+        let running = self.running.clone();
+        let frame_rate = self.frame_rate;
+        
+        // Update the frame sender
+        let mut this = self.clone();
+        this.frame_sender = Some(tx);
+        
+        // Start the capture task
         tokio::spawn(async move {
-            let mut ticker = interval(frame_interval);
-            let mut frame_count = 0u64;
-            let mut error_count = 0u32;
-
-            tracing::info!("Video pipeline started at {} FPS", 1000 / frame_interval.as_millis());
-
-            loop {
-                // Check if still running
-                {
-                    let is_running = running.lock().await;
-                    if !*is_running {
-                        tracing::info!("Video pipeline stopped");
+            let frame_interval = Duration::from_secs_f64(1.0 / frame_rate as f64);
+            let mut last_frame_time = std::time::Instant::now();
+            
+            // Start capture
+            if let Err(e) = capture.lock().await.start().await {
+                tracing::error!("Failed to start capture: {}", e);
+                return;
+            }
+            
+            // Main capture loop
+            *running.lock().await = true;
+            while *running.lock().await {
+                let frame_start = std::time::Instant::now();
+                
+                // Calculate time until next frame should be captured
+                let now = std::time::Instant::now();
+                let elapsed_since_last = now.duration_since(last_frame_time);
+                if elapsed_since_last < frame_interval {
+                    // Sleep until it's time for the next frame
+                    let sleep_time = frame_interval - elapsed_since_last;
+                    tokio::time::sleep(sleep_time).await;
+                }
+                
+                // Capture frame with timeout
+                match tokio::time::timeout(
+                    std::time::Duration::from_millis(100),
+                    capture.lock().await.capture_frame()
+                ).await {
+                    Ok(Ok(Some(frame))) => {
+                        // Send frame to processing thread
+                        if let Err(e) = tx.send(frame).await {
+                            tracing::error!("Failed to send frame to processing thread: {}", e);
+                            break;
+                        }
+                    }
+                    Ok(Ok(None)) => {
+                        // No frame available, continue
+                        continue;
+                    }
+                    Ok(Err(e)) => {
+                        tracing::error!("Capture error: {}", e);
+                        tokio::time::sleep(Duration::from_millis(100)).await;
+                    }
+                    Err(_) => {
+                        tracing::warn!("Frame capture timed out");
+                    }
+                }
+                
+                last_frame_time = std::time::Instant::now();
+                let frame_time = last_frame_time.duration_since(frame_start);
+                
+                // Log if we're falling behind
+                if frame_time > frame_interval {
+                    tracing::warn!("Frame capture is falling behind: {:?} > {:?}", 
+                        frame_time, frame_interval);
+                }
+            }
+            
+            // Stop capture
+            if let Err(e) = capture.lock().await.stop().await {
+                tracing::error!("Failed to stop capture: {}", e);
+            }
+        });
+        
+        // Start the processing task
+        let streaming_clone = self.streaming.clone();
+        let running_clone = self.running.clone();
+        
+        tokio::spawn(async move {
+            while *running_clone.lock().await {
+                match rx.recv().await {
+                    Some(frame) => {
+                        // Process frame
+                        if let Err(e) = streaming_clone.lock().await.stream_frame(&frame).await {
+                            tracing::error!("Failed to stream frame: {}", e);
+                        }
+                    }
+                    None => {
+                        // Channel closed
                         break;
                     }
                 }
-
-                ticker.tick().await;
-
-                // Capture frame
-                let frame = {
-                    let mut cap = capture.lock().await;
-                    match cap.capture_frame().await {
-                        Ok(frame) => frame,
-                        Err(e) => {
-                            error_count += 1;
-                            if error_count > 10 {
-                                tracing::error!("Too many capture errors, stopping pipeline");
-                                break;
-                            }
-                            tracing::warn!("Frame capture failed: {}", e);
-                            continue;
-                        }
-                    }
-                };
-
-                // Encode and stream frame
-                let mut stream = streaming.lock().await;
-                
-                // Get encoder from streaming pipeline
-                // For now, we'll create a placeholder encoded frame
-                // In a real implementation, this would encode the actual frame
-                let encoded_frame = EncodedFrame {
-                    data: vec![0u8; 1024], // Placeholder
-                    timestamp: frame.timestamp,
-                    is_keyframe: frame_count % 30 == 0,
-                };
-
-                match stream.stream_frame(encoded_frame).await {
-                    Ok(_) => {
-                        frame_count += 1;
-                        if frame_count % 30 == 0 {
-                            tracing::debug!("Streamed {} frames", frame_count);
-                        }
-                    }
-                    Err(e) => {
-                        error_count += 1;
-                        tracing::warn!("Frame streaming failed: {}", e);
-                    }
-                }
             }
-
-            tracing::info!("Video pipeline task completed. Total frames: {}", frame_count);
         });
-
+        
         Ok(())
     }
 
     /// Stop the streaming pipeline
     pub async fn stop(&self) -> Result<(), ClientError> {
-        let mut running = self.running.lock().await;
-        *running = false;
-        tracing::info!("Video pipeline stop requested");
+        // Signal all tasks to stop
+        *self.running.lock().await = false;
+        
+        // Drop the frame sender to close the channel
+        drop(self.frame_sender.take());
+        
         Ok(())
     }
 

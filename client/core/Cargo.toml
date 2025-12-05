@@ -17,6 +17,7 @@ webrtc = { workspace = true }
 tokio-tungstenite = { workspace = true }
 futures = { workspace = true }
 bytes = "1.5"
+parking_lot = "0.12"
 
 # Video encoding
 openh264 = "0.6"  # H.264 encoding
@@ -26,6 +27,7 @@ image = { workspace = true }  # Image encoding
 rand = "0.8"      # Random number generation for SSRC
 uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { workspace = true }
+whoami = "1.5"
 
 # GenXLink dependencies
 genxlink-protocol = { path = "../../shared/protocol" }

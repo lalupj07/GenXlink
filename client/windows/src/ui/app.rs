@@ -6,6 +6,7 @@ use super::premium_features::PremiumFeaturesPanel;
 use super::permission_panel::PermissionPanel;
 use super::screen_preview::ScreenPreviewPanel;
 use super::streaming_panel::StreamingPanel;
+use super::devices::DevicesPanel;
 use super::settings::SettingsPanel;
 use genxlink_client_core::audio_streaming::AudioStreamManager;
 use genxlink_client_core::localization::LocalizationManager;
@@ -30,6 +31,9 @@ pub struct GenXLinkApp {
     
     /// Connection dialog
     connection_dialog: Option<ConnectionDialog>,
+    
+    /// Devices panel
+    devices_panel: DevicesPanel,
     
     /// Remote control panel
     remote_control_panel: RemoteControlPanel,
@@ -140,6 +144,7 @@ impl Default for GenXLinkApp {
             device_id: DeviceId::new(),
             notification_manager: NotificationManager::new(),
             connection_dialog: Some(ConnectionDialog::new()),
+            devices_panel: DevicesPanel::new(),
             remote_control_panel: RemoteControlPanel::new(),
             premium_panel: PremiumFeaturesPanel::new(),
             permission_panel: PermissionPanel::new(),
@@ -264,39 +269,11 @@ impl eframe::App for GenXLinkApp {
 
 impl GenXLinkApp {
     fn show_devices_tab(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
-            ui.heading("Available Devices");
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("➕ Connect to Device").clicked() {
-                    // Show connection dialog
-                    if let Some(ref mut dialog) = self.connection_dialog {
-                        dialog.show_dialog();
-                    }
-                }
-            });
-        });
-        ui.add_space(10.0);
+        // Update devices panel
+        self.devices_panel.update();
         
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            for device in &self.devices {
-                self.show_device_card(ui, device);
-                ui.add_space(5.0);
-            }
-            
-            if self.devices.is_empty() {
-                ui.vertical_centered(|ui| {
-                    ui.add_space(50.0);
-                    ui.label("No devices found");
-                    ui.label("Devices will appear here when they come online");
-                    ui.add_space(10.0);
-                    if ui.button("➕ Connect to Device Manually").clicked() {
-                        if let Some(ref mut dialog) = self.connection_dialog {
-                            dialog.show_dialog();
-                        }
-                    }
-                });
-            }
-        });
+        // Show devices panel UI
+        self.devices_panel.ui(ui);
     }
     
     fn show_device_card(&self, ui: &mut egui::Ui, device: &DeviceInfo) {

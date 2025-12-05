@@ -24,6 +24,7 @@ chrono = { workspace = true }
 # WebSocket
 tokio-tungstenite = "0.21"
 futures-util = "0.3"
+futures = "0.3"
 
 # GenXLink dependencies
 genxlink-protocol = { path = "../../shared/protocol" }

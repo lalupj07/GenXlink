@@ -8,7 +8,6 @@ pub struct SettingsPanel {
     auto_start: bool,
     minimize_to_tray: bool,
     enable_notifications: bool,
-    show_status_messages: bool,
     log_level: LogLevel,
 }
 
@@ -62,7 +61,6 @@ impl SettingsPanel {
             auto_start: true,
             minimize_to_tray: true,
             enable_notifications: true,
-            show_status_messages: true,
             log_level: LogLevel::Info,
         }
     }
@@ -70,400 +68,170 @@ impl SettingsPanel {
     pub fn show(&mut self, ui: &mut egui::Ui) -> SettingsAction {
         let mut action = SettingsAction::None;
 
-        // Material Design header with elevation
+        // Header
         ui.vertical_centered(|ui| {
-            ui.add_space(16.0);
-            ui.label(egui::RichText::new("⚙️ Settings")
-                .size(28.0)
-                .strong()
-                .color(egui::Color32::from_rgb(33, 33, 33)));
-            ui.add_space(8.0);
-            ui.label(egui::RichText::new("Configure your GenXLink experience")
-                .size(14.0)
-                .color(egui::Color32::from_rgb(117, 117, 117)));
-            ui.add_space(24.0);
+            ui.heading("⚙️ Settings");
+            ui.add_space(5.0);
+            ui.label("Configure your GenXLink experience");
         });
 
-        // Modern card-based grid layout
-        egui::Grid::new("settings_grid")
-            .num_columns(2)
-            .spacing([20.0, 20.0])
-            .show(ui, |ui| {
-                
-                // Material Design Appearance Card
-                egui::Frame::none()
-                    .fill(egui::Color32::from_rgb(255, 255, 255))
-                    .rounding(egui::Rounding::same(12.0))
-                    .shadow(egui::epaint::Shadow {
-                        offset: egui::vec2(0.0, 2.0),
-                        blur: 8.0,
-                        spread: 0.0,
-                        color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-                    })
-                    .show(ui, |ui| {
-                        ui.vertical(|ui| {
-                            ui.add_space(16.0);
-                            ui.horizontal(|ui| {
-                                ui.add_space(16.0);
-                                ui.label(egui::RichText::new("🎨 Appearance")
-                                    .size(16.0)
-                                    .strong()
-                                    .color(egui::Color32::from_rgb(33, 33, 33)));
-                            });
-                            ui.add_space(16.0);
-                            
+        ui.add_space(20.0);
+        ui.separator();
+        ui.add_space(15.0);
 
-                            ui.horizontal(|ui| {
-                                ui.add_space(16.0);
-                                ui.vertical(|ui| {
-                                    // Theme selector
-                                    ui.label(egui::RichText::new("Theme")
-                                        .size(12.0)
-                                        .color(egui::Color32::from_rgb(97, 97, 97)));
-                                    ui.add_space(4.0);
-                                    
+        // Appearance Section
+        ui.heading("🎨 Appearance");
+        ui.add_space(10.0);
+        
+        // Theme selection
+        ui.horizontal(|ui| {
+            ui.label("🎨 Theme:");
+            ui.add_space(10.0);
 
-                                    let theme_text = match self.selected_theme {
-                                        AppTheme::Light => "☀️ Light",
-                                        AppTheme::Dark => "🌙 Dark", 
-                                        AppTheme::System => "💻 System",
-                                    };
-                                    
+            let mut theme_changed = false;
+            let old_theme = self.selected_theme;
+            
+            egui::ComboBox::from_label("")
+                .selected_text(match self.selected_theme {
+                    AppTheme::Light => "☀️ Light",
+                    AppTheme::Dark => "🌙 Dark",
+                    AppTheme::System => "🖥️ System",
+                })
+                .show_ui(ui, |ui| {
+                    if ui.selectable_value(&mut self.selected_theme, AppTheme::Light, "☀️ Light").clicked() {
+                        theme_changed = self.selected_theme != old_theme;
+                    }
+                    if ui.selectable_value(&mut self.selected_theme, AppTheme::Dark, "🌙 Dark").clicked() {
+                        theme_changed = self.selected_theme != old_theme;
+                    }
+                    if ui.selectable_value(&mut self.selected_theme, AppTheme::System, "🖥️ System").clicked() {
+                        theme_changed = self.selected_theme != old_theme;
+                    }
+                });
 
-                                    let mut theme_changed = false;
-                                    egui::ComboBox::from_id_source("theme_combo")
-                                        .selected_text(theme_text)
-                                        .width(140.0)
-                                        .show_ui(ui, |ui| {
-                                            if ui.selectable_value(&mut self.selected_theme, AppTheme::Light, "☀️ Light").clicked() {
-                                                theme_changed = true;
-                                            }
-                                            if ui.selectable_value(&mut self.selected_theme, AppTheme::Dark, "🌙 Dark").clicked() {
-                                                theme_changed = true;
-                                            }
-                                            if ui.selectable_value(&mut self.selected_theme, AppTheme::System, "💻 System").clicked() {
-                                                theme_changed = true;
-                                            }
-                                        });
-                                    
+            if theme_changed {
+                self.apply_theme_change(ui.ctx());
+            }
+        });
+        
+        // Language selection
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            ui.label("🌐 Language:");
+            ui.add_space(10.0);
 
-                                    if theme_changed {
-                                        self.apply_theme_change(ui.ctx());
-                                    }
-                                    
+            egui::ComboBox::from_label("")
+                .selected_text(format!("{:?}", self.selected_language))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut self.selected_language, AppLanguage::English, "🇺🇸 English");
+                    ui.selectable_value(&mut self.selected_language, AppLanguage::Hindi, "🇮🇳 हिंदी");
+                    ui.selectable_value(&mut self.selected_language, AppLanguage::Tamil, "🇮🇳 தமிழ்");
+                    ui.selectable_value(&mut self.selected_language, AppLanguage::Telugu, "🇮🇳 తెలుగు");
+                    ui.selectable_value(&mut self.selected_language, AppLanguage::Bengali, "🇮🇳 বাংলা");
+                });
+        });
+        
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            ui.colored_label(egui::Color32::from_rgb(150, 150, 150), 
+                "ℹ️ Theme changes apply immediately • Language support coming soon");
+        });
 
-                                    ui.add_space(16.0);
-                                    
+        ui.add_space(20.0);
+        ui.separator();
+        ui.add_space(15.0);
 
-                                    // Language selector
-                                    ui.label(egui::RichText::new("Language")
-                                        .size(12.0)
-                                        .color(egui::Color32::from_rgb(97, 97, 97)));
-                                    ui.add_space(4.0);
-                                    
+        // Behavior Section
+        ui.heading("⚙️ Behavior");
+        ui.add_space(10.0);
+        
+        ui.checkbox(&mut self.auto_start, "🚀 Start GenXLink with Windows");
+        ui.checkbox(&mut self.minimize_to_tray, "🗔 Minimize to system tray");
+        ui.checkbox(&mut self.enable_notifications, "🔔 Enable desktop notifications");
 
-                                    let lang_text = match self.selected_language {
-                                        AppLanguage::English => "🇬🇧 English",
-                                        AppLanguage::Hindi => "🇮🇳 हिंदी",
-                                        AppLanguage::Tamil => "🇮🇳 தமிழ்",
-                                        AppLanguage::Telugu => "🇮🇳 తెలుగు",
-                                        AppLanguage::Bengali => "🇮🇳 বাংলা",
-                                    };
-                                    
+        ui.add_space(20.0);
+        ui.separator();
+        ui.add_space(15.0);
 
-                                    let mut lang_changed = false;
-                                    egui::ComboBox::from_id_source("lang_combo")
-                                        .selected_text(lang_text)
-                                        .width(140.0)
-                                        .show_ui(ui, |ui| {
-                                            if ui.selectable_value(&mut self.selected_language, AppLanguage::English, "🇬🇧 English").clicked() {
-                                                lang_changed = true;
-                                            }
-                                            if ui.selectable_value(&mut self.selected_language, AppLanguage::Hindi, "🇮🇳 हिंदी").clicked() {
-                                                lang_changed = true;
-                                            }
-                                            if ui.selectable_value(&mut self.selected_language, AppLanguage::Tamil, "🇮🇳 தமிழ்").clicked() {
-                                                lang_changed = true;
-                                            }
-                                            if ui.selectable_value(&mut self.selected_language, AppLanguage::Telugu, "🇮🇳 తెలుగు").clicked() {
-                                                lang_changed = true;
-                                            }
-                                            if ui.selectable_value(&mut self.selected_language, AppLanguage::Bengali, "🇮🇳 বাংলা").clicked() {
-                                                lang_changed = true;
-                                            }
-                                        });
-                                    
+        // Advanced Section
+        ui.heading("⚙️ Advanced");
+        ui.add_space(10.0);
+        
+        ui.horizontal(|ui| {
+            ui.label("📝 Log Level:");
+            ui.add_space(10.0);
 
-                                    if lang_changed {
-                                        self.apply_language_change(ui.ctx());
-                                    }
-                                    
+            egui::ComboBox::from_label("")
+                .selected_text(format!("{:?}", self.log_level))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut self.log_level, LogLevel::Error, "❌ Error");
+                    ui.selectable_value(&mut self.log_level, LogLevel::Warn, "⚠️ Warning");
+                    ui.selectable_value(&mut self.log_level, LogLevel::Info, "ℹ️ Info");
+                    ui.selectable_value(&mut self.log_level, LogLevel::Debug, "🐛 Debug");
+                });
+        });
 
-                                    ui.add_space(16.0);
-                                    
+        ui.add_space(10.0);
+        if ui.button("📂 Open Log Folder").clicked() {
+            action = SettingsAction::OpenLogFolder;
+        }
 
-                                    // Status messages checkbox
-                                    ui.add(
-                                        egui::Checkbox::new(&mut self.show_status_messages, "Show status messages")
-                                    );
-                                });
-                                ui.add_space(16.0);
-                            });
-                            ui.add_space(16.0);
-                        });
-                    });
+        ui.add_space(20.0);
+        ui.separator();
+        ui.add_space(15.0);
 
-                // Material Design Behavior Card
-                egui::Frame::none()
-                    .fill(egui::Color32::from_rgb(255, 255, 255))
-                    .rounding(egui::Rounding::same(12.0))
-                    .shadow(egui::epaint::Shadow {
-                        offset: egui::vec2(0.0, 2.0),
-                        blur: 8.0,
-                        spread: 0.0,
-                        color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-                    })
-                    .show(ui, |ui| {
-                        ui.vertical(|ui| {
-                            ui.add_space(16.0);
-                            ui.horizontal(|ui| {
-                                ui.add_space(16.0);
-                                ui.label(egui::RichText::new("🔧 Behavior")
-                                    .size(16.0)
-                                    .strong()
-                                    .color(egui::Color32::from_rgb(33, 33, 33)));
-                            });
-                            ui.add_space(16.0);
-                            
-                            ui.horizontal(|ui| {
-                                ui.add_space(16.0);
-                                ui.vertical(|ui| {
-                                    ui.add(
-                                        egui::Checkbox::new(&mut self.auto_start, "Start with Windows")
-                                    );
-                                    ui.add_space(12.0);
-                                    
-                                    ui.add(
-                                        egui::Checkbox::new(&mut self.minimize_to_tray, "Minimize to tray")
-                                    );
-                                    ui.add_space(12.0);
-                                    
-                                    ui.add(
-                                        egui::Checkbox::new(&mut self.enable_notifications, "Desktop notifications")
-                                    );
-                                });
-                                ui.add_space(16.0);
-                            });
-                            ui.add_space(16.0);
-                        });
-                    });
+        // About Section
+        ui.heading("ℹ️ About");
+        ui.add_space(10.0);
+        
+        ui.vertical(|ui| {
+            ui.label("🚀 GenXLink Remote Desktop");
+            ui.label("📌 Version: 0.1.0");
+            ui.label("🇮🇳 Created in India • Crafted by Indians");
+            ui.label("📧 Contact: genxisinnovation@outlook.com");
+            ui.label("🌐 GitHub: https://github.com/lalupj07/GenXlink");
+        });
 
-                ui.end_row();
-
-                // Material Design Advanced Card
-                egui::Frame::none()
-                    .fill(egui::Color32::from_rgb(255, 255, 255))
-                    .rounding(egui::Rounding::same(12.0))
-                    .shadow(egui::epaint::Shadow {
-                        offset: egui::vec2(0.0, 2.0),
-                        blur: 8.0,
-                        spread: 0.0,
-                        color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-                    })
-                    .show(ui, |ui| {
-                        ui.vertical(|ui| {
-                            ui.add_space(16.0);
-                            ui.horizontal(|ui| {
-                                ui.add_space(16.0);
-                                ui.label(egui::RichText::new("🔬 Advanced")
-                                    .size(16.0)
-                                    .strong()
-                                    .color(egui::Color32::from_rgb(33, 33, 33)));
-                            });
-                            ui.add_space(16.0);
-                            
-                            ui.horizontal(|ui| {
-                                ui.add_space(16.0);
-                                ui.vertical(|ui| {
-                                    ui.label(egui::RichText::new("Log Level")
-                                        .size(12.0)
-                                        .color(egui::Color32::from_rgb(97, 97, 97)));
-                                    ui.add_space(4.0);
-                                    
-                                    let log_text = match self.log_level {
-                                        LogLevel::Error => "❌ Error",
-                                        LogLevel::Warn => "⚠️ Warning",
-                                        LogLevel::Info => "ℹ️ Info",
-                                        LogLevel::Debug => "🐛 Debug",
-                                    };
-                                    
-                                    egui::ComboBox::from_id_source("log_combo")
-                                        .selected_text(log_text)
-                                        .width(140.0)
-                                        .show_ui(ui, |ui| {
-                                            ui.selectable_value(&mut self.log_level, LogLevel::Error, "❌ Error");
-                                            ui.selectable_value(&mut self.log_level, LogLevel::Warn, "⚠️ Warning");
-                                            ui.selectable_value(&mut self.log_level, LogLevel::Info, "ℹ️ Info");
-                                            ui.selectable_value(&mut self.log_level, LogLevel::Debug, "🐛 Debug");
-                                        });
-                                    
-                                    ui.add_space(16.0);
-                                    
-                                    if ui.add(
-                                        egui::Button::new(
-                                            egui::RichText::new("📂 Open Log Folder")
-                                                .color(egui::Color32::WHITE)
-                                                .size(12.0)
-                                                .strong()
-                                        )
-                                            .fill(egui::Color32::from_rgb(63, 81, 181))
-                                            .rounding(egui::Rounding::same(8.0))
-                                            .min_size(egui::vec2(140.0, 32.0))
-                                    ).clicked() {
-                                        action = SettingsAction::OpenLogFolder;
-                                    }
-                                });
-                                ui.add_space(16.0);
-                            });
-                            ui.add_space(16.0);
-                        });
-                    });
-
-                // Material Design About Card
-                egui::Frame::none()
-                    .fill(egui::Color32::from_rgb(255, 255, 255))
-                    .rounding(egui::Rounding::same(12.0))
-                    .shadow(egui::epaint::Shadow {
-                        offset: egui::vec2(0.0, 2.0),
-                        blur: 8.0,
-                        spread: 0.0,
-                        color: egui::Color32::from_rgba_premultiplied(0, 0, 0, 12),
-                    })
-                    .show(ui, |ui| {
-                        ui.vertical_centered(|ui| {
-                            ui.add_space(16.0);
-                            
-                            ui.label(egui::RichText::new("ℹ️ About")
-                                .size(16.0)
-                                .strong()
-                                .color(egui::Color32::from_rgb(33, 33, 33)));
-                            
-                            ui.add_space(16.0);
-                            
-                            // App name with Material Design blue
-                            ui.label(egui::RichText::new("🚀 GenXLink")
-                                .size(18.0)
-                                .strong()
-                                .color(egui::Color32::from_rgb(63, 81, 181)));
-                            
-                            ui.add_space(8.0);
-                            
-                            // Version and details with Material colors
-                            ui.label(egui::RichText::new("Version 0.1.0")
-                                .size(12.0)
-                                .color(egui::Color32::from_rgb(117, 117, 117)));
-                            
-                            ui.add_space(4.0);
-                            
-                            ui.label(egui::RichText::new("🇮🇳 Created in India")
-                                .size(12.0)
-                                .color(egui::Color32::from_rgb(117, 117, 117)));
-                            
-                            ui.add_space(4.0);
-                            
-                            ui.label(egui::RichText::new("📧 genxisinnovation@outlook.com")
-                                .size(11.0)
-                                .color(egui::Color32::from_rgb(117, 117, 117)));
-                            
-                            ui.add_space(16.0);
-                            
-                            // Material Design action buttons
-                            ui.horizontal(|ui| {
-                                if ui.add(
-                                    egui::Button::new(
-                                        egui::RichText::new("📄 License")
-                                            .color(egui::Color32::WHITE)
-                                            .size(12.0)
-                                            .strong()
-                                    )
-                                        .fill(egui::Color32::from_rgb(0, 150, 136))
-                                        .rounding(egui::Rounding::same(8.0))
-                                        .min_size(egui::vec2(90.0, 32.0))
-                                ).clicked() {
-                                    action = SettingsAction::ViewLicense;
-                                }
-                                
-                                ui.add_space(8.0);
-                                
-                                if ui.add(
-                                    egui::Button::new(
-                                        egui::RichText::new("📚 Documentation")
-                                            .color(egui::Color32::WHITE)
-                                            .size(12.0)
-                                            .strong()
-                                    )
-                                        .fill(egui::Color32::from_rgb(76, 175, 80))
-                                        .rounding(egui::Rounding::same(8.0))
-                                        .min_size(egui::vec2(140.0, 32.0))
-                                ).clicked() {
-                                    action = SettingsAction::OpenDocumentation;
-                                }
-                                
-                                ui.add_space(8.0);
-                                
-                                let _ = ui.add(
-                                    egui::Button::new(
-                                        egui::RichText::new("🔗 GitHub")
-                                            .color(egui::Color32::WHITE)
-                                            .size(12.0)
-                                            .strong()
-                                    )
-                                        .fill(egui::Color32::from_rgb(103, 58, 183))
-                                        .rounding(egui::Rounding::same(8.0))
-                                        .min_size(egui::vec2(85.0, 32.0))
-                                );
-                            });
-                            
-                            ui.add_space(16.0);
-                        });
-                    });
-
-                ui.end_row();
-            });
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            if ui.button("📄 License").clicked() {
+                action = SettingsAction::ViewLicense;
+            }
+            ui.add_space(10.0);
+            if ui.button("📚 Documentation").clicked() {
+                action = SettingsAction::OpenDocumentation;
+            }
+        });
 
         action
     }
-    
-    fn apply_theme_change(&self, ctx: &egui::Context) {
-        // Apply theme change to the UI
+
+    pub fn apply_theme_change(&self, ctx: &egui::Context) {
         match self.selected_theme {
             AppTheme::Light => {
-                // Light theme settings would be applied here
-                ctx.send_viewport_cmd(egui::ViewportCommand::Title("GenXLink - Light Theme".to_string()));
+                let mut visuals = egui::Visuals::light();
+                // You can customize the light theme here if needed
+                ctx.set_visuals(visuals);
             }
             AppTheme::Dark => {
-                // Dark theme settings would be applied here
-                ctx.send_viewport_cmd(egui::ViewportCommand::Title("GenXLink - Dark Theme".to_string()));
+                let mut visuals = egui::Visuals::dark();
+                // You can customize the dark theme here if needed
+                ctx.set_visuals(visuals);
             }
             AppTheme::System => {
-                // System theme settings would be applied here
-                ctx.send_viewport_cmd(egui::ViewportCommand::Title("GenXLink - System Theme".to_string()));
+                // For system theme, you might want to detect the system preference
+                // For now, we'll use dark as the default system theme
+                // You can implement system theme detection here
+                ctx.set_visuals(egui::Visuals::dark());
             }
         }
+        // Request a repaint to see the theme change immediately
+        ctx.request_repaint();
     }
-    
-    fn apply_language_change(&self, ctx: &egui::Context) {
-        // Apply language change to the UI
-        let lang_name = match self.selected_language {
-            AppLanguage::English => "English",
-            AppLanguage::Hindi => "हिंदी",
-            AppLanguage::Tamil => "தமிழ்",
-            AppLanguage::Telugu => "తెలుగు",
-            AppLanguage::Bengali => "বাংলা",
-        };
-        
-        // Update window title to show language change
-        ctx.send_viewport_cmd(egui::ViewportCommand::Title(format!("GenXLink - {}", lang_name)));
+
+    pub fn apply_language_change(&self, _ctx: &egui::Context) {
+        // Language change logic will be implemented here
+        // Currently, it's a placeholder
     }
 }
 

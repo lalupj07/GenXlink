@@ -153,7 +153,7 @@ impl ScreenCapturer {
     #[cfg(target_os = "windows")]
     async fn capture_loop_windows<F>(&self, mut callback: F) -> Result<()>
     where
-        F: FnMut(CaptureFrame) -> Result<()>,
+        F: FnMut(CaptureFrame) -> Result<()> + Send + 'static,
     {
         let duplication = self.duplication.as_ref()
             .context("Duplication not initialized")?;
@@ -162,37 +162,82 @@ impl ScreenCapturer {
         let context = self.context.as_ref()
             .context("Context not initialized")?;
         
-        let frame_duration = std::time::Duration::from_millis(1000 / self.config.target_fps as u64);
+        let frame_interval = std::time::Duration::from_secs_f64(1.0 / self.config.target_fps as f64);
+        let mut last_frame_time = std::time::Instant::now();
+        let mut frame_count = 0;
+        let mut last_log_time = std::time::Instant::now();
+        let mut consecutive_errors = 0;
+        const MAX_CONSECUTIVE_ERRORS: u32 = 5;
+        
+        tracing::info!("Starting capture loop at {} FPS", self.config.target_fps);
         
         loop {
             let is_capturing = *self.is_capturing.lock().await;
             if !is_capturing {
+                tracing::info!("Capture loop stopping");
                 break;
             }
-            
-            let start = std::time::Instant::now();
-            
-            // Capture frame
-            match self.capture_frame_windows(duplication, device, context) {
+
+            let frame_start = std::time::Instant::now();
+
+            // Calculate time until next frame should be captured
+            let now = std::time::Instant::now();
+            let elapsed_since_last = now.duration_since(last_frame_time);
+            if elapsed_since_last < frame_interval {
+                // Sleep until it's time for the next frame
+                let sleep_time = frame_interval - elapsed_since_last;
+                tokio::time::sleep(sleep_time).await;
+            }
+
+            // Capture frame (simplified for now)
+            let capture_result = self.capture_frame_windows(duplication, device, context);
+
+            match capture_result {
                 Ok(Some(frame)) => {
                     if let Err(e) = callback(frame) {
                         tracing::error!("Frame callback error: {}", e);
+                    } else {
+                        consecutive_errors = 0; // Reset error counter on successful frame
+                        frame_count += 1;
                     }
                 }
                 Ok(None) => {
-                    // No new frame, continue
+                    // No new frame available, this is normal
+                    continue;
                 }
                 Err(e) => {
-                    tracing::error!("Capture error: {}", e);
-                    // Try to reinitialize on error
-                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                    consecutive_errors += 1;
+                    tracing::error!("Capture error ({} of {}): {}", 
+                        consecutive_errors, MAX_CONSECUTIVE_ERRORS, e);
+                    
+                    if consecutive_errors >= MAX_CONSECUTIVE_ERRORS {
+                        tracing::error!("Too many consecutive errors, stopping capture");
+                        break;
+                    }
+                    
+                    // Exponential backoff on errors
+                    let backoff = std::time::Duration::from_millis(100 * u64::pow(2, consecutive_errors - 1));
+                    tokio::time::sleep(backoff).await;
+                    continue;
                 }
             }
-            
-            // Maintain target FPS
-            let elapsed = start.elapsed();
-            if elapsed < frame_duration {
-                tokio::time::sleep(frame_duration - elapsed).await;
+
+            // Update timing statistics
+            last_frame_time = std::time::Instant::now();
+            let frame_time = last_frame_time.duration_since(frame_start);
+
+            // Log FPS every second
+            if last_frame_time.duration_since(last_log_time) > std::time::Duration::from_secs(1) {
+                let fps = frame_count as f64 / last_frame_time.duration_since(last_log_time).as_secs_f64();
+                tracing::debug!("Capture FPS: {:.1}, Frame time: {:?}", fps, frame_time);
+                frame_count = 0;
+                last_log_time = last_frame_time;
+            }
+
+            // Log warning if we're falling behind
+            if frame_time > frame_interval {
+                tracing::warn!("Frame capture is falling behind: {:?} > {:?}", 
+                    frame_time, frame_interval);
             }
         }
         
