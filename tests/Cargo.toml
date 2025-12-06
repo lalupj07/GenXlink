@@ -1,0 +1,79 @@
+[package]
+name = "genxlink-tests"
+version = "0.2.0"
+edition = "2021"
+authors = ["GenXLink Team"]
+description = "Comprehensive test suite for GenXLink remote desktop platform"
+license = "MIT"
+repository = "https://github.com/genxlink/tests"
+
+[dependencies]
+# Core dependencies
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+
+# GenXLink dependencies
+genxlink-webrtc = { path = "../shared/webrtc" }
+genxlink-crypto = { path = "../shared/crypto" }
+genxlink-protocol = { path = "../shared/protocol" }
+genxlink-auth = { path = "../server/auth" }
+genxlink-relay = { path = "../server/relay" }
+genxlink-api = { path = "../server/api" }
+genxlink-signaling = { path = "../server/signaling" }
+
+# Testing dependencies
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+mockall = "0.12"
+tempfile = "3.8"
+wiremock = "0.5"
+
+# HTTP/WebSocket testing
+reqwest = { workspace = true }
+tokio-tungstenite = "0.21"
+
+# Database testing
+sqlx = { workspace = true }
+redis = { workspace = true }
+
+# Performance monitoring
+pprof = { version = "0.12", features = ["flamegraph", "protobuf-codec"] }
+
+# Security testing
+ring = { workspace = true }
+
+[[bin]]
+name = "test-runner"
+path = "src/main.rs"
+
+[lib]
+name = "genxlink_tests"
+path = "src/lib.rs"
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false
+
+[features]
+default = ["integration-tests", "performance-tests", "security-tests"]
+integration-tests = []
+performance-tests = ["criterion", "pprof"]
+security-tests = []
+
+# Test profiles
+[profile.test]
+opt-level = 1
+debug = true
+
+[profile.bench]
+opt-level = 3
+debug = false
+lto = true

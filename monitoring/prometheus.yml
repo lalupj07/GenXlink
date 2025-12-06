@@ -1,0 +1,51 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # GenXLink API Server
+  - job_name: 'genxlink-api'
+    static_configs:
+      - targets: ['api-server:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # GenXLink Signaling Server
+  - job_name: 'genxlink-signaling'
+    static_configs:
+      - targets: ['signaling-server:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+    scrape_interval: 30s
+
+  # PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s

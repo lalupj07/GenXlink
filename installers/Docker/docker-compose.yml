@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  genxlink-api:
+    build: .
+    ports:
+      - '8000:8000'
+    restart: unless-stopped
+
+  genxlink-signaling:
+    build: .
+    ports:
+      - '8081:8081'
+    restart: unless-stopped

@@ -1,0 +1,54 @@
+[package]
+name = "genxlink-mobile"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "genxlink_mobile"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+# Flutter/FFI bindings
+flutter_rust_bridge = "2.0"
+ffi-support = "0.4"
+
+# Core GenXLink functionality
+genxlink-core = { path = "../../client/core" }
+genxlink-protocol = { path = "../../shared/protocol" }
+genxlink-crypto = { path = "../../shared/crypto" }
+
+# Async runtime
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Networking
+reqwest = { version = "0.11", features = ["json"] }
+websocket = "0.26"
+
+# Image processing
+image = { version = "0.24", features = ["jpeg", "png"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"
+once_cell = "1.19"
+
+# Platform-specific dependencies
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+ndk = "0.8"
+ndk-glue = "0.8"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc = "0.2"
+cocoa = "0.25"
+core-foundation = "0.9"
+uikit = "0.2"

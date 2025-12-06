@@ -37,7 +37,7 @@ pub mod win_impl {
     impl InputInjector for WindowsInputInjector {
         fn inject_keyboard(&mut self, event: &KeyboardEvent) -> Result<(), ClientError> {
             unsafe {
-                let mut input = INPUT {
+                let input = INPUT {
                     r#type: INPUT_KEYBOARD,
                     Anonymous: INPUT_0 {
                         ki: KEYBDINPUT {

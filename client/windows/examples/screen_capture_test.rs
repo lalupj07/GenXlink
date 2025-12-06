@@ -5,7 +5,11 @@
 /// 
 /// Run with: cargo run --example screen_capture_test
 
-use genxlink_client_core::{create_screen_capture, ScreenCapture, PerformanceMonitor};
+use genxlink_client_core::{
+    capture::{ScreenCapture},
+    capture::win_impl::DxgiCapture,
+    performance::PerformanceMonitor,
+};
 use std::time::Duration;
 use tokio::time;
 
@@ -15,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     // Create screen capture
     println!("Initializing screen capture...");
-    let mut capture = create_screen_capture()?;
+    let mut capture = DxgiCapture::new();
     
     // Initialize
     capture.init().await?;

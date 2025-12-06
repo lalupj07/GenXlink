@@ -284,3 +284,7 @@ pub fn create_screen_capture() -> Result<Box<dyn ScreenCapture>, ClientError> {
         Err(ClientError::PlatformNotSupported)
     }
 }
+
+// Re-export DxgiCapture for convenience
+#[cfg(target_os = "windows")]
+pub use win_impl::DxgiCapture;

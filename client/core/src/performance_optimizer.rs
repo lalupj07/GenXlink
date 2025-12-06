@@ -258,7 +258,7 @@ impl AdaptiveQualityController {
     }
 
     /// Update performance metrics
-    pub fn update_metrics(&mut self, frame_time: Duration, encode_time: Duration) {
+    pub fn update_metrics(&mut self, _frame_time: Duration, encode_time: Duration) {
         self.monitor.record_frame();
         self.monitor.record_encode_time(encode_time);
     }

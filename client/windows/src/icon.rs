@@ -33,7 +33,7 @@ fn create_genxlink_icon() -> IconData {
             let center_y = size as f32 / 2.0;
             let dx = x as f32 - center_x;
             let dy = y as f32 - center_y;
-            let dist_from_center = (dx * dx + dy * dy).sqrt();
+            let _dist_from_center = (dx * dx + dy * dy).sqrt();
             let corner_radius = size as f32 * 0.45; // Rounded corners
             
             // Check if we're within the rounded rectangle

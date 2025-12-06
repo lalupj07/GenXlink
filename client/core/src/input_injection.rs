@@ -66,7 +66,7 @@ impl InputInjector {
         let normalized_x = (x * 65535) / self.screen_width;
         let normalized_y = (y * 65535) / self.screen_height;
         
-        let mut input = INPUT {
+        let input = INPUT {
             r#type: INPUT_MOUSE,
             Anonymous: INPUT_0 {
                 mi: MOUSEINPUT {
@@ -89,7 +89,7 @@ impl InputInjector {
     
     /// Inject mouse movement (relative delta)
     fn inject_mouse_move_delta(&self, dx: i32, dy: i32) -> Result<()> {
-        let mut input = INPUT {
+        let input = INPUT {
             r#type: INPUT_MOUSE,
             Anonymous: INPUT_0 {
                 mi: MOUSEINPUT {
@@ -131,7 +131,7 @@ impl InputInjector {
             _ => 0,
         };
         
-        let mut input = INPUT {
+        let input = INPUT {
             r#type: INPUT_MOUSE,
             Anonymous: INPUT_0 {
                 mi: MOUSEINPUT {
@@ -154,7 +154,7 @@ impl InputInjector {
     
     /// Inject mouse wheel scroll
     fn inject_mouse_wheel(&self, delta: i32) -> Result<()> {
-        let mut input = INPUT {
+        let input = INPUT {
             r#type: INPUT_MOUSE,
             Anonymous: INPUT_0 {
                 mi: MOUSEINPUT {
@@ -183,7 +183,7 @@ impl InputInjector {
             KEYEVENTF_KEYUP
         };
         
-        let mut input = INPUT {
+        let input = INPUT {
             r#type: INPUT_KEYBOARD,
             Anonymous: INPUT_0 {
                 ki: KEYBDINPUT {
@@ -225,7 +225,7 @@ impl InputInjector {
     fn inject_text(&self, text: &str) -> Result<()> {
         for ch in text.chars() {
             // Send as Unicode
-            let mut input_down = INPUT {
+            let input_down = INPUT {
                 r#type: INPUT_KEYBOARD,
                 Anonymous: INPUT_0 {
                     ki: KEYBDINPUT {
@@ -238,7 +238,7 @@ impl InputInjector {
                 },
             };
             
-            let mut input_up = INPUT {
+            let input_up = INPUT {
                 r#type: INPUT_KEYBOARD,
                 Anonymous: INPUT_0 {
                     ki: KEYBDINPUT {

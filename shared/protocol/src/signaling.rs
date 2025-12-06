@@ -87,7 +87,7 @@ pub struct PeerInfo {
 }
 
 /// Type of device
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DeviceType {
     Desktop,
     Laptop,

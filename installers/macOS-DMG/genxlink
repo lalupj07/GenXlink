@@ -1,0 +1,30 @@
+#!/bin/bash
+# GenXLink macOS Launcher v1.0.0
+
+echo 'Starting GenXLink Remote Desktop v1.0.0'
+echo '============================================'
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+echo 'Starting API Server...'
+./api-server.exe &
+sleep 2
+
+echo 'Starting Signaling Server...'
+./signaling-server.exe &
+sleep 2
+
+echo ''
+echo '============================================'
+echo '     GenXLink Servers Started'
+echo '============================================'
+echo ''
+echo 'API Server:      http://127.0.0.1:8000'
+echo 'Signaling Server: http://127.0.0.1:8081'
+echo ''
+
+open http://127.0.0.1:8000/health
+open http://127.0.0.1:8081/health
+
+echo 'GenXLink is running on macOS!'
+echo 'Ready for remote desktop connections'

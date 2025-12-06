@@ -181,14 +181,51 @@ impl WebRTCSession {
             .with_media_engine(media_engine)
             .build();
         
-        // Configure ICE servers
+        // Configure ICE servers with multiple public STUN/TURN servers
         let config = RTCConfiguration {
             ice_servers: vec![
+                // Google STUN servers
                 RTCIceServer {
                     urls: vec![
                         "stun:stun.l.google.com:19302".to_owned(),
                         "stun:stun1.l.google.com:19302".to_owned(),
+                        "stun:stun2.l.google.com:19302".to_owned(),
+                        "stun:stun3.l.google.com:19302".to_owned(),
+                        "stun:stun4.l.google.com:19302".to_owned(),
                     ],
+                    ..Default::default()
+                },
+                // Mozilla STUN servers
+                RTCIceServer {
+                    urls: vec!["stun:stun.services.mozilla.com:3478".to_owned()],
+                    ..Default::default()
+                },
+                // Twilio STUN servers
+                RTCIceServer {
+                    urls: vec![
+                        "stun:global.stun.twilio.com:3478".to_owned(),
+                        "stun:global.stun.twilio.com:3478?transport=udp".to_owned(),
+                    ],
+                    ..Default::default()
+                },
+                // Public TURN servers (for restricted networks)
+                RTCIceServer {
+                    urls: vec![
+                        "turn:openrelay.metered.ca:80".to_owned(),
+                        "turn:openrelay.metered.ca:443".to_owned(),
+                    ],
+                    username: "openrelayproject".to_owned(),
+                    credential: "openrelayproject".to_owned(),
+                    ..Default::default()
+                },
+                // Additional TURN servers
+                RTCIceServer {
+                    urls: vec![
+                        "turn:turn.p2pshare.com:3478".to_owned(),
+                        "turn:turn.p2pshare.com:443".to_owned(),
+                    ],
+                    username: "p2pshare".to_owned(),
+                    credential: "p2pshare".to_owned(),
                     ..Default::default()
                 },
             ],

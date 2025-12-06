@@ -10,14 +10,13 @@ use tokio::time::{interval, Duration};
 
 /// Video capture and streaming pipeline
 use std::collections::VecDeque;
-use tokio::sync::mpsc;
 
 pub struct VideoPipeline {
     capture: Arc<Mutex<Box<dyn ScreenCapture>>>,
     streaming: Arc<Mutex<StreamingPipeline>>,
     frame_rate: u32,
     running: Arc<Mutex<bool>>,
-    frame_sender: Option<mpsc::Sender<Frame>>,
+    frame_sender: Arc<Mutex<Option<mpsc::Sender<Frame>>>>,
     frame_buffer_size: usize,
 }
 
@@ -35,15 +34,16 @@ impl VideoPipeline {
             streaming: Arc::new(Mutex::new(streaming)),
             frame_rate,
             running: Arc::new(Mutex::new(false)),
-            frame_sender: None,
+            frame_sender: Arc::new(Mutex::new(None)),
             frame_buffer_size: 5, // Default buffer size of 5 frames
         })
     }
 
     /// Start the streaming pipeline
     pub async fn start(&self) -> Result<(), ClientError> {
-        if self.frame_sender.is_some() {
-            return Err(ClientError::new("Pipeline already started"));
+        // Check if already started
+        if self.frame_sender.lock().await.is_some() {
+            return Err(ClientError::StreamingError("Pipeline already started".to_string()));
         }
 
         // Create channel for frame buffering
@@ -52,26 +52,26 @@ impl VideoPipeline {
         let capture = self.capture.clone();
         let streaming = self.streaming.clone();
         let running = self.running.clone();
+        let running_for_capture = running.clone();
         let frame_rate = self.frame_rate;
         
-        // Update the frame sender
-        let mut this = self.clone();
-        this.frame_sender = Some(tx);
+        // Set the frame sender
+        *self.frame_sender.lock().await = Some(tx.clone());
         
         // Start the capture task
         tokio::spawn(async move {
             let frame_interval = Duration::from_secs_f64(1.0 / frame_rate as f64);
             let mut last_frame_time = std::time::Instant::now();
             
-            // Start capture
-            if let Err(e) = capture.lock().await.start().await {
-                tracing::error!("Failed to start capture: {}", e);
+            // Initialize capture
+            if let Err(e) = capture.lock().await.init().await {
+                tracing::error!("Failed to initialize capture: {}", e);
                 return;
             }
             
             // Main capture loop
-            *running.lock().await = true;
-            while *running.lock().await {
+            *running_for_capture.lock().await = true;
+            while *running_for_capture.lock().await {
                 let frame_start = std::time::Instant::now();
                 
                 // Calculate time until next frame should be captured
@@ -88,16 +88,12 @@ impl VideoPipeline {
                     std::time::Duration::from_millis(100),
                     capture.lock().await.capture_frame()
                 ).await {
-                    Ok(Ok(Some(frame))) => {
+                    Ok(Ok(frame)) => {
                         // Send frame to processing thread
                         if let Err(e) = tx.send(frame).await {
                             tracing::error!("Failed to send frame to processing thread: {}", e);
                             break;
                         }
-                    }
-                    Ok(Ok(None)) => {
-                        // No frame available, continue
-                        continue;
                     }
                     Ok(Err(e)) => {
                         tracing::error!("Capture error: {}", e);
@@ -119,21 +115,29 @@ impl VideoPipeline {
             }
             
             // Stop capture
-            if let Err(e) = capture.lock().await.stop().await {
-                tracing::error!("Failed to stop capture: {}", e);
+            if let Err(e) = capture.lock().await.cleanup().await {
+                tracing::error!("Failed to cleanup capture: {}", e);
             }
         });
         
         // Start the processing task
-        let streaming_clone = self.streaming.clone();
-        let running_clone = self.running.clone();
+        let streaming_clone = streaming.clone();
+        let running_clone = running.clone();
         
         tokio::spawn(async move {
             while *running_clone.lock().await {
                 match rx.recv().await {
                     Some(frame) => {
+                        // Convert capture frame to streaming frame
+                        let streaming_frame = crate::streaming::Frame {
+                            width: frame.width,
+                            height: frame.height,
+                            data: frame.data,
+                            timestamp: std::time::Instant::now(),
+                        };
+                        
                         // Process frame
-                        if let Err(e) = streaming_clone.lock().await.stream_frame(&frame).await {
+                        if let Err(e) = streaming_clone.lock().await.stream_frame(&streaming_frame).await {
                             tracing::error!("Failed to stream frame: {}", e);
                         }
                     }
@@ -154,7 +158,7 @@ impl VideoPipeline {
         *self.running.lock().await = false;
         
         // Drop the frame sender to close the channel
-        drop(self.frame_sender.take());
+        self.frame_sender.lock().await.take();
         
         Ok(())
     }
@@ -262,18 +266,31 @@ impl PipelineManager {
 
     /// Stop a pipeline by ID
     pub async fn stop_pipeline(&self, id: usize) -> Result<(), ClientError> {
-        let pipelines = self.pipelines.lock().await;
-        let pipeline = pipelines.get(id)
+        let mut pipelines = self.pipelines.lock().await;
+        let pipeline = pipelines.get_mut(id)
             .ok_or_else(|| ClientError::StreamingError(format!("Pipeline {} not found", id)))?;
         
-        pipeline.stop().await
+        // Use Arc::get_mut to get mutable access if we have the only reference
+        if let Some(pipeline_mut) = Arc::get_mut(pipeline) {
+            pipeline_mut.stop().await
+        } else {
+            // If there are other references, we need a different approach
+            // For now, we'll clone and replace
+            let _pipeline_clone = Arc::clone(pipeline);
+            drop(pipelines); // Release the lock
+            
+            // This is a temporary fix - in production you'd want a better design
+            Err(ClientError::StreamingError("Cannot stop pipeline with active references".to_string()))
+        }
     }
 
     /// Stop all pipelines
     pub async fn stop_all(&self) -> Result<(), ClientError> {
-        let pipelines = self.pipelines.lock().await;
-        for pipeline in pipelines.iter() {
-            pipeline.stop().await?;
+        let mut pipelines = self.pipelines.lock().await;
+        for pipeline in pipelines.iter_mut() {
+            if let Some(pipeline_mut) = Arc::get_mut(pipeline) {
+                pipeline_mut.stop().await?;
+            }
         }
         Ok(())
     }

@@ -1,0 +1,19 @@
+Package: genxlink
+Version: 1.0.0
+Section: net
+Priority: optional
+Architecture: amd64
+Depends: libc6, libssl3
+Maintainer: GenXis Innovations <support@genxlink.com>
+Description: Remote Desktop Platform
+ GenXLink is a high-performance remote desktop platform
+ featuring WebRTC media streaming, end-to-end encryption,
+ and cross-platform support.
+ .
+ Key features:
+   - Real-time screen sharing
+   - Audio streaming
+   - Secure file transfer
+   - WebRTC-based connectivity
+   - End-to-end encryption
+Homepage: https://github.com/genxlink/genxlink

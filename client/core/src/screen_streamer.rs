@@ -102,7 +102,7 @@ impl ScreenStreamer {
 
     /// Send a captured frame via RTP
     async fn send_frame(
-        track: Arc<TrackLocalStaticRTP>,
+        _track: Arc<TrackLocalStaticRTP>,
         frame: CaptureFrame,
         seq_num: Arc<Mutex<u16>>,
         timestamp: Arc<Mutex<u32>>,
@@ -115,7 +115,7 @@ impl ScreenStreamer {
         let mut ts = timestamp.lock().await;
 
         // Create RTP packet
-        let packet = Packet {
+        let _packet = Packet {
             header: webrtc::rtp::header::Header {
                 version: 2,
                 padding: false,

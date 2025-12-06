@@ -7,7 +7,13 @@ pub mod connection;
 pub mod signaling;
 pub mod input;
 
-pub use messages::*;
+// Use specific imports to avoid ambiguous re-exports
+pub use messages::{
+    Message, MessagePayload, ConnectionRequest, ConnectionResponse, 
+    DisconnectReason, VideoFrame, VideoConfig, KeyboardEvent, MouseEvent,
+    ClipboardData, QualityReport, FileTransferRequest, FileTransferAccept,
+    FileTransferReject, FileChunk, FileTransferComplete, FileTransferCancel
+};
 pub use device::*;
 pub use connection::*;
 pub use signaling::*;

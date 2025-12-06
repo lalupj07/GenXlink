@@ -177,19 +177,20 @@ async fn test_streaming_statistics() {
     
     // Stream a few dummy frames
     for i in 0..5 {
-        let encoded_frame = genxlink_client_core::encoder::EncodedFrame {
-            data: vec![0u8; 1024],
-            timestamp: i * 33,
-            is_keyframe: i == 0,
+        let frame = genxlink_client_core::streaming::Frame {
+            width: 1920,
+            height: 1080,
+            data: vec![0u8; 1920 * 1080 * 4], // RGBA
+            timestamp: std::time::Instant::now(),
         };
         
-        pipeline.stream_frame(encoded_frame).await
+        pipeline.stream_frame(&frame).await
             .expect("Failed to stream frame");
     }
     
     let stats = pipeline.get_stats();
     
-    assert_eq!(stats.packets_sent, 5, "Should have sent 5 packets");
+    assert_eq!(stats.frames_sent, 5, "Should have sent 5 frames");
     
     println!("✅ Streaming statistics test completed");
     println!("   Packets sent: {}", stats.packets_sent);

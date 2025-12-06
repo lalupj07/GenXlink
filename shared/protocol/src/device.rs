@@ -72,7 +72,7 @@ fn generate_windows_device_id() -> DeviceId {
     
     // Try to get machine GUID from registry
     let output = Command::new("reg")
-        .args(&["query", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography", "/v", "MachineGuid"])
+        .args(["query", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography", "/v", "MachineGuid"])
         .output();
     
     if let Ok(output) = output {

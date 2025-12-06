@@ -8,8 +8,8 @@
 /// Run with: cargo run --example streaming_demo
 
 use genxlink_client_core::{
-    encoder::{H264Encoder, EncoderConfig, VideoCodec},
-    streaming::StreamingPipeline,
+    encoder::{H264Encoder, EncoderConfig, VideoCodec, VideoEncoder},
+    streaming::{StreamingPipeline, Frame},
     webrtc::{WebRTCManager, WebRTCConfig},
 };
 use std::time::Duration;
@@ -64,14 +64,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   (In production, this would capture and encode real frames)\n");
     
     for i in 0..10 {
-        // Create dummy encoded frame
-        let encoded_frame = genxlink_client_core::encoder::EncodedFrame {
-            data: vec![0u8; 1024],
-            timestamp: i * 33, // 30 FPS = 33ms per frame
-            is_keyframe: i % 30 == 0,
+        // Create dummy frame for streaming
+        let frame = Frame {
+            width: 1920,
+            height: 1080,
+            data: vec![0u8; 1920 * 1080 * 4], // RGBA
+            timestamp: std::time::Instant::now(),
         };
         
-        pipeline.stream_frame(encoded_frame).await?;
+        pipeline.stream_frame(&frame).await?;
         
         if i % 3 == 0 {
             let stats = pipeline.get_stats();

@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // Contact: genxisinnovation@outlook.com
 
+pub mod config;
 pub mod capture;
 pub mod encoder;
 pub mod input;
@@ -36,16 +37,28 @@ pub mod webrtc_session;
 pub mod input_injection;
 pub mod remote_control_manager;
 pub mod audio_capture;
+pub mod audio_playback;
 pub mod audio_stream_manager;
+pub mod security;
+pub mod webrtc_security;
+pub mod file_transfer_enhanced;
+pub mod large_file_transfer;
+pub mod access_control;
+pub mod role_based_access;
+pub mod database;
+pub mod auth_service;
+pub mod device_registry;
+pub mod webrtc_integration;
+pub mod session_manager;
+pub mod p2p_discovery;
+pub mod p2p_signaling;
+pub mod p2p_integration;
 
-pub use capture::*;
-pub use encoder::*;
-pub use input::*;
-pub use clipboard::*;
-pub use transport::*;
-pub use performance::*;
-pub use webrtc::*;
-pub use signaling_client::*;
+pub use capture::{Frame, ScreenCapture, DxgiCapture};
+pub use encoder::{VideoEncoder, EncodedFrame, EncoderConfig};
+pub use streaming::{StreamingPipeline, StreamingStats, Frame as StreamingFrame};
+pub use input::{InputInjector};
+pub use clipboard::{ClipboardManager};
 
 use thiserror::Error;
 

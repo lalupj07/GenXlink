@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="GenXLink Remote Desktop" 
+           Language="1033" 
+           Version="0.2.0.0" 
+           Manufacturer="GenXLink Innovations" 
+           UpgradeCode="12345678-1234-5678-9012-123456789012">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="GenXLink Remote Desktop - Secure, high-performance remote desktop solution"
+             Comments="Advanced remote desktop with end-to-end encryption"
+             Platform="x64"
+             />
+
+    <!-- Media definition -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Upgrade rules -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of GenXLink is already installed." />
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="GenXLink Remote Desktop" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="RegistryEntries" />
+    </Feature>
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="GenXLink" />
+      </Directory>
+      
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="GenXLink"/>
+      </Directory>
+      
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      
+      <Directory Id="LocalAppDataFolder" Name="LocalAppData">
+        <Directory Id="GenXLinkDataFolder" Name="GenXLink">
+          <Directory Id="LogsFolder" Name="logs" />
+          <Directory Id="ConfigFolder" Name="config" />
+          <Directory Id="CacheFolder" Name="cache" />
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- Main application components -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Main executable -->
+      <Component Id="MainExecutable">
+        <File Id="GenXLink.exe" 
+              Source="$(var.GenXLink.TargetPath)" 
+              KeyPath="yes" />
+        
+        <!-- Application manifest for Windows 10/11 compatibility -->
+        <File Id="GenXLink.exe.manifest" 
+              Source="genxlink.exe.manifest" />
+      </Component>
+
+      <!-- DLL dependencies -->
+      <Component Id="Dependencies">
+        <File Id="webrtc.dll" Source="webrtc.dll" />
+        <File Id="crypto.dll" Source="crypto.dll" />
+        <File Id="media.dll" Source="media.dll" />
+        <File Id="network.dll" Source="network.dll" />
+      </Component>
+
+      <!-- Configuration files -->
+      <Component Id="Configuration">
+        <File Id="default_config.toml" Source="config\default.toml" />
+        <File Id="logging_config.toml" Source="config\logging.toml" />
+        <File Id="security_config.toml" Source="config\security.toml" />
+      </Component>
+
+      <!-- Resources -->
+      <Component Id="Resources">
+        <File Id="icon.ico" Source="resources\icon.ico" />
+        <File Id="banner.bmp" Source="resources\banner.bmp" />
+        <File Id="dialog.bmp" Source="resources\dialog.bmp" />
+      </Component>
+
+      <!-- License and documentation -->
+      <Component Id="Documentation">
+        <File Id="LICENSE.txt" Source="..\..\..\LICENSE" />
+        <File Id="README.txt" Source="..\..\..\README.md" />
+        <File Id="USER_GUIDE.pdf" Source="docs\user_guide.pdf" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Start menu shortcut -->
+    <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder">
+      <Shortcut Id="ApplicationStartMenuShortcut"
+                Name="GenXLink Remote Desktop"
+                Description="Secure remote desktop connection"
+                Target="[#GenXLink.exe]"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="icon.ico"
+                IconIndex="0" />
+      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+      <RegistryValue Root="HKCU"
+                     Key="Software\GenXLink\GenXLink"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes"/>
+    </Component>
+
+    <!-- Desktop shortcut -->
+    <Component Id="DesktopShortcut" Directory="DesktopFolder">
+      <Shortcut Id="ApplicationDesktopShortcut"
+                Name="GenXLink"
+                Description="GenXLink Remote Desktop"
+                Target="[#GenXLink.exe]"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="icon.ico"
+                IconIndex="0" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\GenXLink\GenXLink"
+                     Name="desktop_shortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes"/>
+    </Component>
+
+    <!-- Registry entries -->
+    <Component Id="RegistryEntries" Directory="INSTALLFOLDER">
+      <!-- Application registration -->
+      <RegistryKey Root="HKLM" Key="Software\GenXLink\GenXLink">
+        <RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" />
+        <RegistryValue Name="Version" Type="string" Value="0.2.0" />
+        <RegistryValue Name="Installed" Type="integer" Value="1" />
+      </RegistryKey>
+
+      <!-- File associations -->
+      <RegistryKey Root="HKCR" Key=".genxlink">
+        <RegistryValue Type="string" Value="GenXLink.Session" />
+      </RegistryKey>
+      <RegistryKey Root="HKCR" Key="GenXLink.Session">
+        <RegistryValue Type="string" Value="GenXLink Session File" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]icon.ico,0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#GenXLink.exe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- URL protocol handler -->
+      <RegistryKey Root="HKCR" Key="genxlink">
+        <RegistryValue Type="string" Value="URL:GenXLink Protocol" />
+        <RegistryValue Name="URL Protocol" Type="string" Value="" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]icon.ico,0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#GenXLink.exe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+    </ComponentGroup>
+
+    <!-- Icons -->
+    <Icon Id="icon.ico" SourceFile="resources\icon.ico" />
+
+    <!-- Properties -->
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+    <Property Id="ARPHELPLINK" Value="https://docs.genxlink.com" />
+    <Property Id="ARPURLINFOABOUT" Value="https://genxlink.com" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+    <!-- UI configuration -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <!-- Custom bitmaps -->
+    <WixVariable Id="WixUIBannerBmp" Value="resources\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="resources\dialog.bmp" />
+
+    <!-- License agreement -->
+    <WixVariable Id="WixUILicenseRtf" Value="..\..\..\LICENSE.rtf" />
+
+    <!-- Custom actions -->
+    <Binary Id="CustomActionsDLL" SourceFile="custom_actions.dll" />
+    
+    <!-- Pre-installation validation -->
+    <CustomAction Id="ValidateSystem" 
+                  BinaryKey="CustomActionsDLL" 
+                  DllEntry="ValidateSystem" />
+    
+    <!-- Post-installation setup -->
+    <CustomAction Id="SetupApplication" 
+                  BinaryKey="CustomActionsDLL" 
+                  DllEntry="SetupApplication" 
+                  Return="check" 
+                  Impersonate="yes" />
+    
+    <!-- Pre-uninstallation cleanup -->
+    <CustomAction Id="CleanupApplication" 
+                  BinaryKey="CustomActionsDLL" 
+                  DllEntry="CleanupApplication" 
+                  Return="ignore" 
+                  Impersonate="yes" />
+
+    <!-- Install sequence -->
+    <InstallExecuteSequence>
+      <Custom Action="ValidateSystem" Before="CostInitialize">NOT Installed</Custom>
+      <Custom Action="SetupApplication" After="InstallFinalize">NOT Installed</Custom>
+      <Custom Action="CleanupApplication" Before="RemoveFiles">Installed</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Launch application after install -->
+    <CustomAction Id="LaunchApplication" 
+                  FileKey="GenXLink.exe" 
+                  ExecCommand="" 
+                  Return="asyncNoWait" />
+    
+    <UI>
+      <Publish Dialog="ExitDialog" 
+               Control="Finish" 
+               Event="DoAction" 
+               Value="LaunchApplication"
+               Order="1">NOT Installed</Publish>
+    </UI>
+
+    <!-- Firewall exception -->
+    <Component Id="FirewallException" Directory="INSTALLFOLDER">
+      <CreateFolder />
+      <util:FirewallException Id="GenXLinkFirewallException"
+                              Name="GenXLink Remote Desktop"
+                              Program="[INSTALLFOLDER]GenXLink.exe"
+                              Scope="any"
+                              Profile="all"
+                              Port="8080,8081,8082"
+                              Protocol="tcp"
+                              Description="GenXLink remote desktop connections" />
+    </Component>
+
+    <!-- Windows service registration (if applicable) -->
+    <Component Id="WindowsService" Directory="INSTALLFOLDER">
+      <File Id="GenXLinkService.exe" Source="GenXLinkService.exe" />
+      
+      <ServiceInstall Id="GenXLinkService"
+                      Type="ownProcess"
+                      Vital="yes"
+                      Name="GenXLinkService"
+                      DisplayName="GenXLink Remote Desktop Service"
+                      Description="Background service for GenXLink remote desktop connections"
+                      Start="auto"
+                      Account="LocalSystem"
+                      ErrorControl="normal"
+                      Interactive="no">
+        <util:ServiceConfig DelayedAutoStart="yes" />
+      </ServiceInstall>
+      
+      <ServiceControl Id="StartService"
+                      Start="install"
+                      Stop="both"
+                      Remove="uninstall"
+                      Name="GenXLinkService"
+                      Wait="yes" />
+    </Component>
+
+    <!-- Auto-start configuration -->
+    <Component Id="AutoStart" Directory="INSTALLFOLDER">
+      <RegistryKey Root="HKLM" 
+                   Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">
+        <RegistryValue Name="GenXLink"
+                       Type="string"
+                       Value="&quot;[INSTALLFOLDER]GenXLink.exe&quot; --minimized"
+                       KeyPath="yes" />
+      </RegistryKey>
+    </Component>
+
+    <!-- Uninstall shortcut -->
+    <Component Id="UninstallShortcut" Directory="ApplicationProgramsFolder">
+      <Shortcut Id="UninstallProduct"
+                Name="Uninstall GenXLink"
+                Target="[SystemFolder]msiexec.exe"
+                Arguments="/x [ProductCode]"
+                Description="Uninstall GenXLink Remote Desktop"
+                Icon="icon.ico"
+                IconIndex="0" />
+      <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+      <RegistryValue Root="HKCU"
+                     Key="Software\GenXLink\GenXLink"
+                     Name="uninstall_shortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes"/>
+    </Component>
+
+    <!-- Update check integration -->
+    <Component Id="UpdateIntegration" Directory="INSTALLFOLDER">
+      <RegistryKey Root="HKLM" 
+                   Key="SOFTWARE\GenXLink\GenXLink\Updates">
+        <RegistryValue Name="AutoUpdate" Type="integer" Value="1" />
+        <RegistryValue Name="UpdateChannel" Type="string" Value="stable" />
+        <RegistryValue Name="LastCheck" Type="string" Value="" />
+        <RegistryValue Name="UpdateURL" Type="string" Value="https://updates.genxlink.com" />
+      </RegistryKey>
+    </Component>
+
+  </Product>
+</Wix>

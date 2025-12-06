@@ -1,8 +1,9 @@
-use genxlink_crypto::{sign_data, verify_signature, generate_keypair};
+use genxlink_crypto::{sign_data, verify_signature, generate_rsa_keypair};
+use rsa::traits::PublicKeyParts;
 
 #[test]
 fn test_keypair_generation() {
-    let result = generate_keypair();
+    let result = generate_rsa_keypair(2048);
     assert!(result.is_ok(), "Keypair generation should succeed");
     
     let (private_key, public_key) = result.unwrap();
@@ -13,7 +14,7 @@ fn test_keypair_generation() {
 
 #[test]
 fn test_signature_creation_and_verification() {
-    let (private_key, public_key) = generate_keypair().expect("Failed to generate keypair");
+    let (private_key, public_key) = generate_rsa_keypair(2048).expect("Failed to generate keypair");
     
     let data = b"Test data for signing";
     
@@ -32,7 +33,7 @@ fn test_signature_creation_and_verification() {
 
 #[test]
 fn test_signature_verification_fails_with_wrong_data() {
-    let (private_key, public_key) = generate_keypair().expect("Failed to generate keypair");
+    let (private_key, public_key) = generate_rsa_keypair(2048).expect("Failed to generate keypair");
     
     let data = b"Original data";
     let wrong_data = b"Modified data";
@@ -48,8 +49,8 @@ fn test_signature_verification_fails_with_wrong_data() {
 
 #[test]
 fn test_signature_verification_fails_with_wrong_key() {
-    let (private_key1, _) = generate_keypair().expect("Failed to generate keypair 1");
-    let (_, public_key2) = generate_keypair().expect("Failed to generate keypair 2");
+    let (private_key1, _) = generate_rsa_keypair(2048).expect("Failed to generate keypair 1");
+    let (_, public_key2) = generate_rsa_keypair(2048).expect("Failed to generate keypair 2");
     
     let data = b"Test data";
     

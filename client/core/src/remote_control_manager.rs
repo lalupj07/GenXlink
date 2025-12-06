@@ -44,7 +44,7 @@ impl RemoteControlManager {
         *state = RemoteControlState::Requesting;
         drop(state);
         
-        let request = RemoteControlRequest {
+        let _request = RemoteControlRequest {
             from: self.device_id.clone(),
             to: remote_device_id.clone(),
         };

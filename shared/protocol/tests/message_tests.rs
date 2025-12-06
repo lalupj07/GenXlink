@@ -1,12 +1,16 @@
-use genxlink_protocol::{Message, MessagePayload, DeviceId};
+use genxlink_protocol::{Message, MessagePayload, DeviceId, SessionId};
 use genxlink_protocol::signaling::{SignalingMessage, PeerInfo, DeviceType};
 
 #[test]
 fn test_message_serialization() {
-    let device_id = DeviceId::new();
+    let session_id = SessionId::new();
     let payload = MessagePayload::Ping;
     
-    let message = Message::new(device_id.clone(), payload);
+    let message = Message {
+        session_id,
+        sequence: 1,
+        payload,
+    };
     
     // Serialize to JSON
     let json = serde_json::to_string(&message).expect("Failed to serialize");
@@ -14,7 +18,7 @@ fn test_message_serialization() {
     
     // Deserialize back
     let deserialized: Message = serde_json::from_str(&json).expect("Failed to deserialize");
-    assert_eq!(deserialized.device_id, device_id);
+    assert_eq!(deserialized.session_id, session_id);
 }
 
 #[test]

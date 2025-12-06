@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_bitrate() {
-        let mut controller = AdaptiveBitrateController::new(5000);
+        let controller = AdaptiveBitrateController::new(5000);
         assert_eq!(controller.current_bitrate(), 5000);
     }
 

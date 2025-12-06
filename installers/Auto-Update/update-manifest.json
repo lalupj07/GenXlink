@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "releaseDate": "2025-12-06T02:23:00Z",
+  "platforms": {
+    "windows": {
+      "msi": {
+        "url": "https://releases.genxlink.com/v1.0.0/GenXLink-v1.0.0-Windows-MSI.zip",
+        "sha256": "abc123..."
+      },
+      "portable": {
+        "url": "https://releases.genxlink.com/v1.0.0/GenXLink-v1.0.0-Windows-Portable.zip"
+      }
+    },
+    "linux": {
+      "deb": {
+        "url": "https://releases.genxlink.com/v1.0.0/genxlink_1.0.0_amd64.zip"
+      },
+      "rpm": {
+        "url": "https://releases.genxlink.com/v1.0.0/genxlink-1.0.0-1.x86_64.zip"
+      }
+    },
+    "macos": {
+      "dmg": {
+        "url": "https://releases.genxlink.com/v1.0.0/GenXLink-v1.0.0-macOS.zip"
+      }
+    },
+    "docker": {
+      "image": "genxlink/genxlink:1.0.0"
+    }
+  },
+  "changelog": [
+    "Initial release of GenXLink Remote Desktop Platform",
+    "WebRTC media streaming support",
+    "End-to-end encryption",
+    "Cross-platform installers",
+    "Docker containerization"
+  ]
+}

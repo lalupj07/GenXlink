@@ -2,6 +2,7 @@
 members = [
     "client/windows",
     "client/core",
+    "client/ui-demo",
     "server",
     "server/api",
     "server/signaling",
@@ -9,6 +10,7 @@ members = [
     "shared/protocol",
     "shared/crypto",
     "shared/licensing",
+    "dev-server",
 ]
 # Exclude client for Docker builds (Railway)
 exclude = []
@@ -56,8 +58,7 @@ egui = "0.28"
 egui_extras = { version = "0.28", features = ["image"] }
 image = "0.25"
 
-# Video encoding
-ffmpeg-next = "7.0"
+# Video encoding (handled in client/core as optional)
 mp4 = "0.14"
 
 # Logging
@@ -70,6 +71,7 @@ thiserror = "1.0"
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
+time = { version = "0.3", features = ["serde"] }
 
 # UUID
 uuid = { version = "1.6", features = ["v4", "serde"] }
@@ -77,6 +79,17 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 # Configuration
 config = "0.13"
 dotenv = "0.15"
+clap = { version = "4.4", features = ["derive"] }
+
+# Additional dependencies for relay server
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+prometheus = "0.13"
+metrics = "0.22"
+metrics-exporter-prometheus = "0.13"
+reqwest = { version = "0.11", features = ["json"] }
+flate2 = "1.0"
+zstd = "0.13"
+hmac = "0.12"
 
 [profile.release]
 opt-level = "z"     # Optimize for size

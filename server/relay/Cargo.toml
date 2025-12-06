@@ -15,6 +15,54 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+async-trait = "0.1"
+
+# HTTP/WebSocket dependencies
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+hyper = { workspace = true }
+tokio-tungstenite = "0.21"
+
+# Metrics and monitoring
+prometheus = { workspace = true, optional = true }
+metrics = { workspace = true, optional = true }
+metrics-exporter-prometheus = { workspace = true, optional = true }
+
+# Configuration
+config = { workspace = true }
+clap = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+redis = { workspace = true }
+
+# Networking
+reqwest = { workspace = true }
+
+# Compression
+flate2 = "1.0"
+zstd = "0.13"
+
+# Security
+ring = { workspace = true }
+hmac = "0.12"
+sha2 = "0.10"
 
 # GenXLink dependencies
 genxlink-protocol = { path = "../../shared/protocol" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"
+mockall = "0.12"
+
+[features]
+default = ["full"]
+full = ["geographic-routing", "bandwidth-management", "metrics"]
+geographic-routing = []
+bandwidth-management = []
+metrics = ["dep:prometheus", "dep:metrics", "dep:metrics-exporter-prometheus"]

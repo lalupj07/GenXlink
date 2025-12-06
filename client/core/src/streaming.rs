@@ -72,7 +72,7 @@ impl VideoStreamer {
 
     /// Create RTP packet from encoded frame
     fn create_rtp_packet(&self, frame: &EncodedFrame) -> Result<webrtc::rtp::packet::Packet, ClientError> {
-        let mut packet = webrtc::rtp::packet::Packet {
+        let packet = webrtc::rtp::packet::Packet {
             header: webrtc::rtp::header::Header {
                 version: 2,
                 padding: false,
@@ -206,7 +206,7 @@ impl StreamingPipeline {
                 if *avg_frame_time > target_frame_time * 1.5 {
                     tracing::warn!(
                         "Streaming is falling behind: avg frame time {:.2}ms > {:.2}ms",
-                        avg_frame_time * 1000.0,
+                        *avg_frame_time * 1000.0,
                         target_frame_time * 1000.0
                     );
                 }

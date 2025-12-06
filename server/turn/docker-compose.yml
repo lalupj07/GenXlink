@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  turn:
+    build: .
+    container_name: genxlink-turn
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - EXTERNAL_IP=${EXTERNAL_IP:-auto}
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - turn_logs:/var/log
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+      - "5349:5349/tcp"
+      - "49152-65535:49152-65535/udp"
+
+volumes:
+  turn_logs:

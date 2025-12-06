@@ -1,0 +1,63 @@
+{
+    "folders": [
+        {
+            "name": "GenXLink Root",
+            "path": "."
+        },
+        {
+            "name": "UI Demo",
+            "path": "./client/ui-demo"
+        }
+    ],
+    "settings": {
+        "rust-analyzer.linkedProjects": [
+            "./client/ui-demo/Cargo.toml"
+        ],
+        "rust-analyzer.cargo.features": "all",
+        "files.associations": {
+            "*.rs": "rust"
+        },
+        "editor.formatOnSave": true
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Debug GenXLink UI Demo",
+                "type": "cppvsdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/client/ui-demo/target/debug/genxlink.exe",
+                "args": [],
+                "cwd": "${workspaceFolder}/client/ui-demo",
+                "preLaunchTask": "cargo: build"
+            }
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "cargo: build",
+                "type": "shell",
+                "command": "cargo",
+                "args": ["build"],
+                "group": "build",
+                "options": {
+                    "cwd": "${workspaceFolder}/client/ui-demo"
+                },
+                "problemMatcher": []
+            },
+            {
+                "label": "cargo: run",
+                "type": "shell",
+                "command": "cargo",
+                "args": ["run"],
+                "group": "build",
+                "options": {
+                    "cwd": "${workspaceFolder}/client/ui-demo"
+                },
+                "problemMatcher": []
+            }
+        ]
+    }
+}

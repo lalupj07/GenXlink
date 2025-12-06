@@ -7,7 +7,11 @@ license.workspace = true
 
 [[bin]]
 name = "genxlink-api"
-path = "src/main.rs"
+path = "src/main_simple.rs"
+
+[[test]]
+name = "api_tests"
+path = "tests/api_tests.rs"
 
 [dependencies]
 tokio = { workspace = true }
@@ -23,7 +27,8 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 config = { workspace = true }
 dotenv = { workspace = true }
-chrono = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+time = { workspace = true }
 uuid = { workspace = true }
 
 # JWT
@@ -34,3 +39,7 @@ bcrypt = "0.15"
 genxlink-protocol = { path = "../../shared/protocol" }
 genxlink-crypto = { path = "../../shared/crypto" }
 genxlink-licensing = { path = "../../shared/licensing" }
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tokio-test = "0.4"

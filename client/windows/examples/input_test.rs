@@ -7,8 +7,17 @@
 ///
 /// Run with: cargo run --example input_test
 
-use genxlink_client_core::{create_input_injector, create_clipboard_manager, InputInjector, ClipboardManager};
-use genxlink_protocol::{KeyboardEvent, MouseEvent, MouseEventType, KeyModifiers, ClipboardData};
+use genxlink_client_core::{
+    input::{InputInjector},
+    input::win_impl::WindowsInputInjector,
+    clipboard::ClipboardManager,
+    clipboard::win_impl::WindowsClipboardManager,
+};
+use genxlink_protocol::{
+    KeyboardEvent, MouseEvent, MouseEventType,
+    messages::KeyModifiers,
+    ClipboardData,
+};
 use std::thread;
 use std::time::Duration;
 
@@ -17,11 +26,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==============================\n");
     
     // Create input injector
-    let mut injector = create_input_injector()?;
+    let mut injector = WindowsInputInjector::new();
     println!("✓ Input injector created");
     
     // Create clipboard manager
-    let mut clipboard = create_clipboard_manager()?;
+    let mut clipboard = WindowsClipboardManager::new();
     println!("✓ Clipboard manager created\n");
     
     // Test 1: Mouse Movement
