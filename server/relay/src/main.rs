@@ -106,11 +106,11 @@ async fn load_config(args: &Args) -> Result<RelayServerConfig> {
             config.location.longitude = location.get("longitude").unwrap().clone().into_float().unwrap() as f64;
             config.location.timezone = location.get("timezone").unwrap().clone().into_string().unwrap();
         }
-        if let Ok(capacity) = settings.get::<u32>("server.capacity") {
-            config.capacity = capacity;
+        if let Ok(capacity) = settings.get("server.capacity").and_then(|v| v.clone().into_int().ok()) {
+            config.capacity = capacity as u32;
         }
-        if let Ok(bandwidth) = settings.get::<u64>("server.bandwidth_limit") {
-            config.bandwidth_limit = bandwidth;
+        if let Ok(bandwidth) = settings.get("server.bandwidth_limit").and_then(|v| v.clone().into_int().ok()) {
+            config.bandwidth_limit = bandwidth as u64;
         }
         if let Ok(strategy) = settings.get_table("load_balancing") {
             if let Ok(algorithm) = strategy.get_string("algorithm") {
@@ -125,19 +125,19 @@ async fn load_config(args: &Args) -> Result<RelayServerConfig> {
                     _ => BalancingAlgorithm::Adaptive,
                 };
             }
-            if let Ok(geo_weight) = strategy.get::<f64>("geographic_weight") {
+            if let Ok(geo_weight) = strategy.get("geographic_weight").and_then(|v| v.clone().into_float().ok()) {
                 config.load_balancing_strategy.geographic_weight = geo_weight;
             }
-            if let Ok(perf_weight) = strategy.get::<f64>("performance_weight") {
+            if let Ok(perf_weight) = strategy.get("performance_weight").and_then(|v| v.clone().into_float().ok()) {
                 config.load_balancing_strategy.performance_weight = perf_weight;
             }
-            if let Ok(cap_weight) = strategy.get::<f64>("capacity_weight") {
+            if let Ok(cap_weight) = strategy.get("capacity_weight").and_then(|v| v.clone().into_float().ok()) {
                 config.load_balancing_strategy.capacity_weight = cap_weight;
             }
-            if let Ok(latency_threshold) = strategy.get::<u32>("latency_threshold") {
-                config.load_balancing_strategy.latency_threshold = latency_threshold;
+            if let Ok(latency_threshold) = strategy.get("latency_threshold").and_then(|v| v.clone().into_int().ok()) {
+                config.load_balancing_strategy.latency_threshold = latency_threshold as u32;
             }
-            if let Ok(bandwidth_threshold) = strategy.get::<f64>("bandwidth_threshold") {
+            if let Ok(bandwidth_threshold) = strategy.get("bandwidth_threshold").and_then(|v| v.clone().into_float().ok()) {
                 config.load_balancing_strategy.bandwidth_threshold = bandwidth_threshold;
             }
         }

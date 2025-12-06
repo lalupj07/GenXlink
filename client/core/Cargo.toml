@@ -38,6 +38,11 @@ aes-gcm = "0.10"   # AES-256-GCM encryption
 sha2 = "0.10"      # SHA-256 hashing
 base64 = "0.21"    # Base64 encoding
 
+# Installation ID & Connection ID
+dirs = "5.0"       # Platform config directories
+md5 = "0.7"        # Machine fingerprint hashing
+log = "0.4"        # Logging
+
 # GenXLink dependencies
 genxlink-protocol = { path = "../../shared/protocol" }
 genxlink-crypto = { path = "../../shared/crypto" }

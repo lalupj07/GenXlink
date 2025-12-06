@@ -18,6 +18,8 @@ use genxlink_client_core::{
     auth_service::AuthService,
 };
 use genxlink_client_core::session_manager::{SessionManager, SessionConfig};
+use genxlink_client_core::installation_id::get_installation_id;
+use genxlink_client_core::connection_id::get_connection_id;
 
 /// Main application state
 pub struct GenXLinkApp {
@@ -221,17 +223,25 @@ impl eframe::App for GenXLinkApp {
         );
         self.auth_panel.update_async_operations(&mut auth_service);
         
-        // Top panel with tabs
+        // Top panel with YOUR ID prominently displayed
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.heading("GenXLink");
                 
                 ui.separator();
                 
-                // Show authentication status
-                // TODO: Make this async-safe by caching the session state
-                ui.label("👤 Not Authenticated");
-                ui.selectable_value(&mut self.current_tab, Tab::Authentication, "🔐 Login");
+                // Show YOUR CONNECTION ID prominently
+                let conn_id = get_connection_id();
+                ui.label("Your ID:");
+                ui.add(egui::Label::new(
+                    egui::RichText::new(&conn_id.display_id)
+                        .size(18.0)
+                        .strong()
+                        .color(egui::Color32::from_rgb(0, 212, 255))
+                ));
+                if ui.small_button("📋 Copy").clicked() {
+                    ui.output_mut(|o| o.copied_text = conn_id.display_id.clone());
+                }
                 
                 ui.separator();
                 
@@ -262,6 +272,12 @@ impl eframe::App for GenXLinkApp {
                         ui.colored_label(egui::Color32::from_rgb(239, 68, 68), format!("⚠ {}", msg));
                     }
                 }
+                
+                ui.separator();
+                
+                // Show installation ID (unique per installation)
+                let install_id = get_installation_id();
+                ui.label(format!("📋 {}", install_id.display_id()));
                 
                 ui.separator();
                 

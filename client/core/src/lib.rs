@@ -53,6 +53,9 @@ pub mod session_manager;
 pub mod p2p_discovery;
 pub mod p2p_signaling;
 pub mod p2p_integration;
+pub mod installation_id;
+pub mod connection_id;
+pub mod connection_manager;
 
 pub use capture::{Frame, ScreenCapture, DxgiCapture};
 pub use encoder::{VideoEncoder, EncodedFrame, EncoderConfig};

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{RwLock, mpsc, Mutex};
 use tokio::net::{TcpListener, TcpStream};
-use tokio_tungstenite::{accept_async, connect_async, tungstenite::Message};
+use tokio_tungstenite::{accept_async, connect_async, tungstenite::Message, WebSocketStream, MaybeTlsStream};
 use tracing::{info, error, warn, debug};
 use uuid::Uuid;
 use futures::{SinkExt, StreamExt};
@@ -151,7 +151,7 @@ impl P2PSignaling {
         Ok(())
     }
 
-    /// Handle incoming WebSocket connection from a peer
+    /// Handle incoming WebSocket connection from a peer (server-side)
     async fn handle_peer_websocket(
         stream: TcpStream,
         my_device_id: DeviceId,
@@ -160,46 +160,33 @@ impl P2PSignaling {
     ) -> Result<DeviceId> {
         let ws_stream = accept_async(stream).await
             .context("Failed to accept WebSocket connection")?;
+        
         let (mut ws_sender, mut ws_receiver) = ws_stream.split();
         let (message_tx, mut message_rx) = mpsc::unbounded_channel::<Message>();
         let (response_tx, mut response_rx) = mpsc::unbounded_channel::<P2PSignalingMessage>();
         
         // Handle outgoing messages
-        let ws_sender_task = tokio::spawn(async move {
+        tokio::spawn(async move {
             while let Some(msg) = message_rx.recv().await {
                 if let Err(e) = ws_sender.send(msg).await {
-                    error!("Failed to send WebSocket message: {}", e);
+                    error!("Failed to send WebSocket message: {:?}", e);
                     break;
                 }
             }
         });
         
         // Handle incoming messages
-        let active_connections_clone = active_connections.clone();
-        let event_tx_clone = event_tx.clone();
         let response_tx_clone = response_tx.clone();
-        
-        let ws_receiver_task = tokio::spawn(async move {
+        tokio::spawn(async move {
             while let Some(msg) = ws_receiver.next().await {
                 match msg {
                     Ok(Message::Text(text)) => {
-                        match serde_json::from_str::<P2PSignalingMessage>(&text) {
-                            Ok(signaling_msg) => {
-                                let _ = response_tx_clone.send(signaling_msg);
-                            }
-                            Err(e) => {
-                                error!("Failed to parse signaling message: {}", e);
-                            }
+                        if let Ok(signaling_msg) = serde_json::from_str::<P2PSignalingMessage>(&text) {
+                            let _ = response_tx_clone.send(signaling_msg);
                         }
                     }
-                    Ok(Message::Close(_)) => {
-                        debug!("WebSocket connection closed");
-                        break;
-                    }
-                    Err(e) => {
-                        error!("WebSocket error: {}", e);
-                        break;
-                    }
+                    Ok(Message::Close(_)) => break,
+                    Err(_) => break,
                     _ => {}
                 }
             }
@@ -208,6 +195,120 @@ impl P2PSignaling {
         // Process signaling messages
         let mut peer_device_id: Option<DeviceId> = None;
         let mut connection_stored = false;
+        let active_connections_clone = active_connections.clone();
+        let event_tx_clone = event_tx.clone();
+        
+        while let Some(signaling_msg) = response_rx.recv().await {
+            if peer_device_id.is_none() {
+                peer_device_id = Some(signaling_msg.from_device.clone());
+                
+                if !connection_stored {
+                    let connection = PeerWebSocketConnection {
+                        device_id: signaling_msg.from_device.clone(),
+                        websocket_tx: message_tx.clone(),
+                        message_rx: mpsc::unbounded_channel::<P2PSignalingMessage>().1,
+                        last_seen: chrono::Utc::now(),
+                    };
+                    
+                    let mut connections = active_connections_clone.write().await;
+                    connections.insert(signaling_msg.from_device.clone(), connection);
+                    connection_stored = true;
+                }
+                
+                let _ = event_tx_clone.send(P2PSignalingEvent::PeerConnected(signaling_msg.from_device.clone()));
+            }
+            
+            match signaling_msg.message_type {
+                P2PMessageType::Offer => {
+                    let _ = event_tx_clone.send(P2PSignalingEvent::OfferReceived {
+                        from_device: signaling_msg.from_device,
+                        offer: signaling_msg.payload,
+                    });
+                }
+                P2PMessageType::Answer => {
+                    let _ = event_tx_clone.send(P2PSignalingEvent::AnswerReceived {
+                        from_device: signaling_msg.from_device,
+                        answer: signaling_msg.payload,
+                    });
+                }
+                P2PMessageType::IceCandidate => {
+                    let _ = event_tx_clone.send(P2PSignalingEvent::IceCandidateReceived {
+                        from_device: signaling_msg.from_device,
+                        candidate: signaling_msg.payload,
+                    });
+                }
+                P2PMessageType::Ping => {
+                    let pong_msg = P2PSignalingMessage {
+                        message_type: P2PMessageType::Pong,
+                        from_device: my_device_id.clone(),
+                        to_device: signaling_msg.from_device,
+                        offer_id: None,
+                        payload: "pong".to_string(),
+                        timestamp: std::time::SystemTime::now(),
+                    };
+                    if let Ok(text) = serde_json::to_string(&pong_msg) {
+                        let _ = message_tx.send(Message::Text(text));
+                    }
+                }
+                P2PMessageType::Pong => {
+                    debug!("Received pong from peer: {}", signaling_msg.from_device);
+                }
+            }
+        }
+        
+        if let Some(device_id) = peer_device_id {
+            let mut connections = active_connections.write().await;
+            connections.remove(&device_id);
+            let _ = event_tx.send(P2PSignalingEvent::PeerDisconnected(device_id.clone()));
+            return Ok(device_id);
+        }
+        
+        Err(anyhow!("Peer connection established but device ID not determined"))
+    }
+
+    /// Handle client-initiated WebSocket connection
+    async fn handle_client_websocket(
+        ws_stream: WebSocketStream<MaybeTlsStream<TcpStream>>,
+        my_device_id: DeviceId,
+        active_connections: Arc<RwLock<HashMap<DeviceId, PeerWebSocketConnection>>>,
+        event_tx: mpsc::UnboundedSender<P2PSignalingEvent>,
+    ) -> Result<DeviceId> {
+        let (mut ws_sender, mut ws_receiver) = ws_stream.split();
+        let (message_tx, mut message_rx) = mpsc::unbounded_channel::<Message>();
+        let (response_tx, mut response_rx) = mpsc::unbounded_channel::<P2PSignalingMessage>();
+        
+        // Handle outgoing messages
+        tokio::spawn(async move {
+            while let Some(msg) = message_rx.recv().await {
+                if let Err(e) = ws_sender.send(msg).await {
+                    error!("Failed to send WebSocket message: {:?}", e);
+                    break;
+                }
+            }
+        });
+        
+        // Handle incoming messages
+        let response_tx_clone = response_tx.clone();
+        tokio::spawn(async move {
+            while let Some(msg) = ws_receiver.next().await {
+                match msg {
+                    Ok(Message::Text(text)) => {
+                        if let Ok(signaling_msg) = serde_json::from_str::<P2PSignalingMessage>(&text) {
+                            let _ = response_tx_clone.send(signaling_msg);
+                        }
+                    }
+                    Ok(Message::Close(_)) => break,
+                    Err(_) => break,
+                    _ => {}
+                }
+            }
+        });
+        
+        // Process signaling messages
+        let mut peer_device_id: Option<DeviceId> = None;
+        let mut connection_stored = false;
+        let active_connections_clone = active_connections.clone();
+        let event_tx_clone = event_tx.clone();
         
         while let Some(signaling_msg) = response_rx.recv().await {
             if peer_device_id.is_none() {
@@ -275,10 +376,7 @@ impl P2PSignaling {
             }
         }
         
-        // Cleanup
-        ws_sender_task.abort();
-        ws_receiver_task.abort();
-        
+        // Cleanup - tasks will be dropped when function returns
         if let Some(device_id) = peer_device_id {
             let mut connections = active_connections.write().await;
             connections.remove(&device_id);
@@ -316,7 +414,7 @@ impl P2PSignaling {
         let event_tx = self.event_tx.clone();
         
         tokio::spawn(async move {
-            match Self::handle_peer_websocket(ws_stream, device_id, active_connections, event_tx).await {
+            match Self::handle_client_websocket(ws_stream, device_id, active_connections, event_tx).await {
                 Ok(peer_device_id) => {
                     info!("Successfully connected to peer: {}", peer_device_id);
                 }

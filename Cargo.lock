@@ -3007,6 +3007,7 @@ dependencies = [
  "base64 0.21.7",
  "bytes",
  "chrono",
+ "dirs",
  "ffmpeg-next",
  "futures",
  "futures-util",
@@ -3014,6 +3015,8 @@ dependencies = [
  "genxlink-licensing",
  "genxlink-protocol",
  "image 0.25.9",
+ "log",
+ "md5",
  "mp4",
  "openh264",
  "parking_lot",
@@ -3173,10 +3176,12 @@ name = "genxlink-ui-demo"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "dirs",
  "eframe 0.27.2",
  "egui 0.27.2",
  "env_logger 0.10.2",
+ "genxlink-client-core",
  "hostname",
  "tokio",
 ]
@@ -4606,6 +4611,12 @@ dependencies = [
  "cfg-if",
  "digest",
 ]
+
+[[package]]
+name = "md5"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
 
 [[package]]
 name = "memchr"

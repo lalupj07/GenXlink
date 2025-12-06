@@ -11,8 +11,9 @@ pub mod input;
 pub use messages::{
     Message, MessagePayload, ConnectionRequest, ConnectionResponse, 
     DisconnectReason, VideoFrame, VideoConfig, KeyboardEvent, MouseEvent,
-    ClipboardData, QualityReport, FileTransferRequest, FileTransferAccept,
-    FileTransferReject, FileChunk, FileTransferComplete, FileTransferCancel
+    MouseEventType, ClipboardData, QualityReport, FileTransferRequest, 
+    FileTransferAccept, FileTransferReject, FileChunk, FileTransferComplete, 
+    FileTransferCancel
 };
 pub use device::*;
 pub use connection::*;

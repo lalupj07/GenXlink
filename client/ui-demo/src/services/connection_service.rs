@@ -222,15 +222,15 @@ impl ConnectionService {
     /// Handle incoming signaling message
     pub async fn handle_signaling_message(&mut self, from_peer: &str, message: SignalingMessage) {
         match message {
-            SignalingMessage::Offer(sdp) => {
+            SignalingMessage::Offer(_sdp) => {
                 println!("📥 Received offer from: {}", from_peer);
                 // In production: Set remote description, create answer
             }
-            SignalingMessage::Answer(sdp) => {
+            SignalingMessage::Answer(_sdp) => {
                 println!("📥 Received answer from: {}", from_peer);
                 // In production: Set remote description
             }
-            SignalingMessage::IceCandidate(candidate) => {
+            SignalingMessage::IceCandidate(_candidate) => {
                 println!("📥 Received ICE candidate from: {}", from_peer);
                 // In production: Add ICE candidate
             }

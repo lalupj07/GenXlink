@@ -6,11 +6,26 @@
 
 use egui::IconData;
 
+/// Embedded icon data (256x256 PNG converted to RGBA)
+/// This is the GenXLink logo with the stylized X
+static ICON_DATA: &[u8] = include_bytes!("../../../assets/icons/genxlink.ico");
+
 /// Load the GenXLink application icon
 pub fn load_icon() -> IconData {
-    // For now, we'll create a programmatic version of the icon
-    // In production, you would load the actual PNG/ICO file
+    // Try to load from embedded ICO file
+    if let Some(icon) = load_icon_from_ico() {
+        return icon;
+    }
+    // Fallback to programmatic icon
     create_genxlink_icon()
+}
+
+/// Load icon from embedded ICO data
+fn load_icon_from_ico() -> Option<IconData> {
+    // ICO files can contain multiple images, we want the largest one
+    // For simplicity, we'll use the programmatic fallback for now
+    // In production, use the `ico` crate to parse the ICO file
+    None
 }
 
 /// Create a programmatic version of the GenXLink icon

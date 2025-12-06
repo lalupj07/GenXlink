@@ -12,14 +12,28 @@ use genxlink_protocol::{DeviceId, SignalingMessage};
 
 /// Peer discovery mechanism without central server
 /// Uses multicast DNS and local network discovery
-#[derive(Clone)]
 pub struct P2PDiscovery {
     device_id: DeviceId,
     device_name: String,
     peers: Arc<RwLock<HashMap<DeviceId, PeerInfo>>>,
     event_tx: mpsc::UnboundedSender<DiscoveryEvent>,
-    multicast_rx: mpsc::UnboundedReceiver<DiscoveryPacket>,
+    multicast_rx: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<DiscoveryPacket>>>,
     multicast_tx: mpsc::UnboundedSender<DiscoveryPacket>,
+}
+
+impl Clone for P2PDiscovery {
+    fn clone(&self) -> Self {
+        // Create new channels for the clone - each clone gets its own receiver
+        let (tx, rx) = mpsc::unbounded_channel();
+        Self {
+            device_id: self.device_id.clone(),
+            device_name: self.device_name.clone(),
+            peers: self.peers.clone(),
+            event_tx: self.event_tx.clone(),
+            multicast_rx: Arc::new(tokio::sync::Mutex::new(rx)),
+            multicast_tx: tx,
+        }
+    }
 }
 
 /// Information about a discovered peer
@@ -71,7 +85,7 @@ impl P2PDiscovery {
             device_name,
             peers: Arc::new(RwLock::new(HashMap::new())),
             event_tx,
-            multicast_rx,
+            multicast_rx: Arc::new(tokio::sync::Mutex::new(multicast_rx)),
             multicast_tx,
         };
         
@@ -131,13 +145,18 @@ impl P2PDiscovery {
 
     /// Start listening for peer announcements
     async fn start_peer_listener(&mut self) {
-        let multicast_rx = self.multicast_rx.take().unwrap();
+        let multicast_rx = self.multicast_rx.clone();
         let peers = self.peers.clone();
         let event_tx = self.event_tx.clone();
         let my_device_id = self.device_id.clone();
         
         tokio::spawn(async move {
-            while let Some(packet) = multicast_rx.recv().await {
+            loop {
+                let packet = {
+                    let mut rx = multicast_rx.lock().await;
+                    rx.recv().await
+                };
+                let Some(packet) = packet else { break };
                 // Ignore our own packets
                 if packet.device_id == my_device_id {
                     continue;
