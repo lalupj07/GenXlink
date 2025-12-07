@@ -3,6 +3,7 @@ members = [
     "client/windows",
     "client/core",
     "client/ui-demo",
+    "client/webview-test",
     "server",
     "server/api",
     "server/signaling",

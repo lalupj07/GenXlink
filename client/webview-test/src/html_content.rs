@@ -1,0 +1,1123 @@
+// Copyright (c) 2025 GenXis Innovations
+// Licensed under the Apache License, Version 2.0
+
+/// Returns the HTML content for the WebView test interface
+pub fn get_test_html() -> String {
+    r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenXLink WebView Test</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .logo span {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.7;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-input);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .video-container {
+            background: #000;
+            border-radius: 12px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-placeholder {
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .video-placeholder .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .log-container {
+            background: var(--bg-input);
+            border-radius: 8px;
+            padding: 16px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry .time {
+            color: var(--text-secondary);
+            margin-right: 8px;
+        }
+
+        .log-entry.info { color: #60a5fa; }
+        .log-entry.success { color: var(--success); }
+        .log-entry.warning { color: var(--warning); }
+        .log-entry.error { color: var(--danger); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            background: var(--bg-input);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stat-item .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .connection-id-display {
+            background: var(--bg-input);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .connection-id-display .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .connection-id-display .id {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Consolas', monospace;
+            letter-spacing: 4px;
+            color: var(--primary);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            width: 48px;
+            height: 24px;
+            appearance: none;
+            background: var(--bg-input);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked {
+            background: var(--primary);
+        }
+
+        .toggle-switch input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(24px);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: var(--bg-input);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">GX</div>
+                <div>
+                    <h1>GenXLink</h1>
+                    <span>WebView Test Interface</span>
+                </div>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Disconnected</span>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="connection">Connection</button>
+            <button class="tab" data-tab="media">Media</button>
+            <button class="tab" data-tab="settings">Settings</button>
+            <button class="tab" data-tab="logs">Logs</button>
+        </div>
+
+        <!-- Connection Tab -->
+        <div id="tab-connection" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2>📡 Your Connection</h2>
+                    <div class="connection-id-display">
+                        <div class="label">Your Connection ID</div>
+                        <div class="id" id="myConnectionId">------</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="generateConnectionId()">
+                            🔄 Generate New ID
+                        </button>
+                        <button class="btn btn-outline" onclick="copyConnectionId()">
+                            📋 Copy ID
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🔗 Connect to Peer</h2>
+                    <div class="input-group">
+                        <label>Remote Connection ID</label>
+                        <input type="text" id="remoteId" placeholder="Enter 6-digit connection ID" maxlength="6">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="connectToPeer()" id="connectBtn">
+                            ▶️ Connect
+                        </button>
+                        <button class="btn btn-danger hidden" onclick="disconnect()" id="disconnectBtn">
+                            ⏹️ Disconnect
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Connection Stats</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="value" id="statLatency">--</div>
+                            <div class="label">Latency (ms)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="statBitrate">--</div>
+                            <div class="label">Bitrate (kbps)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="statPacketLoss">--</div>
+                            <div class="label">Packet Loss (%)</div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Connection Type</label>
+                        <input type="text" id="connectionType" value="Not connected" readonly>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🌐 Signaling Server</h2>
+                    <div class="input-group">
+                        <label>Server URL</label>
+                        <input type="text" id="signalingUrl" value="wss://genxlink-production.up.railway.app/ws">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="connectSignaling()">
+                            🔌 Connect to Server
+                        </button>
+                        <button class="btn btn-outline" onclick="testSignaling()">
+                            🧪 Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Tab -->
+        <div id="tab-media" class="tab-content hidden">
+            <div class="grid">
+                <div class="card">
+                    <h2>🖥️ Local Screen</h2>
+                    <div class="video-container">
+                        <video id="localVideo" autoplay muted playsinline></video>
+                        <div class="video-placeholder" id="localPlaceholder">
+                            <div class="icon">🖥️</div>
+                            <div>Click "Start Screen Share" to begin</div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="startScreenShare()" id="startShareBtn">
+                            📺 Start Screen Share
+                        </button>
+                        <button class="btn btn-danger hidden" onclick="stopScreenShare()" id="stopShareBtn">
+                            ⏹️ Stop Sharing
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📱 Remote Screen</h2>
+                    <div class="video-container">
+                        <video id="remoteVideo" autoplay playsinline></video>
+                        <div class="video-placeholder" id="remotePlaceholder">
+                            <div class="icon">📱</div>
+                            <div>Waiting for remote stream...</div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-outline" onclick="toggleFullscreen()">
+                            🔲 Fullscreen
+                        </button>
+                        <button class="btn btn-outline" onclick="takeScreenshot()">
+                            📷 Screenshot
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <h2>🎤 Audio Settings</h2>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Microphone</label>
+                            <select id="micSelect">
+                                <option value="">Select microphone...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Speaker</label>
+                            <select id="speakerSelect">
+                                <option value="">Select speaker...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="audioEnabled">
+                        <label for="audioEnabled">Enable Audio</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-content hidden">
+            <div class="grid">
+                <div class="card">
+                    <h2>🎬 Video Quality</h2>
+                    <div class="input-group">
+                        <label>Resolution</label>
+                        <select id="resolution">
+                            <option value="720">720p (1280x720)</option>
+                            <option value="1080" selected>1080p (1920x1080)</option>
+                            <option value="1440">1440p (2560x1440)</option>
+                            <option value="2160">4K (3840x2160)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Frame Rate</label>
+                        <select id="framerate">
+                            <option value="15">15 FPS</option>
+                            <option value="30" selected>30 FPS</option>
+                            <option value="60">60 FPS</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Bitrate (kbps)</label>
+                        <input type="number" id="bitrate" value="2000" min="500" max="10000">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🔒 Security</h2>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="e2eEncryption" checked>
+                        <label for="e2eEncryption">End-to-End Encryption</label>
+                    </div>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="requireAuth">
+                        <label for="requireAuth">Require Authentication</label>
+                    </div>
+                    <div class="input-group">
+                        <label>Access Password (optional)</label>
+                        <input type="password" id="accessPassword" placeholder="Set a password for connections">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🌐 Network</h2>
+                    <div class="input-group">
+                        <label>STUN Server</label>
+                        <input type="text" id="stunServer" value="stun:stun.l.google.com:19302">
+                    </div>
+                    <div class="input-group">
+                        <label>TURN Server (optional)</label>
+                        <input type="text" id="turnServer" placeholder="turn:your-turn-server.com:3478">
+                    </div>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="forceTurn">
+                        <label for="forceTurn">Force TURN Relay</label>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>⚙️ Advanced</h2>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="hardwareAccel" checked>
+                        <label for="hardwareAccel">Hardware Acceleration</label>
+                    </div>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="adaptiveBitrate" checked>
+                        <label for="adaptiveBitrate">Adaptive Bitrate</label>
+                    </div>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="lowLatencyMode">
+                        <label for="lowLatencyMode">Low Latency Mode</label>
+                    </div>
+                    <div class="btn-group" style="margin-top: 16px;">
+                        <button class="btn btn-primary" onclick="saveSettings()">
+                            💾 Save Settings
+                        </button>
+                        <button class="btn btn-outline" onclick="resetSettings()">
+                            🔄 Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div id="tab-logs" class="tab-content hidden">
+            <div class="card full-width">
+                <h2>📋 Activity Log</h2>
+                <div class="btn-group" style="margin-bottom: 16px;">
+                    <button class="btn btn-outline" onclick="clearLogs()">🗑️ Clear Logs</button>
+                    <button class="btn btn-outline" onclick="exportLogs()">📤 Export Logs</button>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <!-- Logs will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IPC communication with Rust backend
+        function sendToRust(message) {
+            if (window.ipc) {
+                window.ipc.postMessage(JSON.stringify(message));
+            }
+            log('info', `Sent to Rust: ${JSON.stringify(message)}`);
+        }
+
+        // State
+        let isConnected = false;
+        let myConnectionId = null;
+        let peerConnection = null;
+        let localStream = null;
+        let signalingSocket = null;
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+            });
+        });
+
+        // Generate connection ID
+        function generateConnectionId() {
+            myConnectionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('myConnectionId').textContent = myConnectionId;
+            log('success', `Generated new connection ID: ${myConnectionId}`);
+            sendToRust({ type: 'log', message: `Generated ID: ${myConnectionId}` });
+        }
+
+        // Copy connection ID
+        function copyConnectionId() {
+            if (myConnectionId) {
+                navigator.clipboard.writeText(myConnectionId);
+                log('info', 'Connection ID copied to clipboard');
+            }
+        }
+
+        // Connect to signaling server
+        function connectSignaling() {
+            const url = document.getElementById('signalingUrl').value;
+            log('info', `Connecting to signaling server: ${url}`);
+            
+            try {
+                signalingSocket = new WebSocket(url);
+                
+                signalingSocket.onopen = () => {
+                    log('success', 'Connected to signaling server');
+                    updateConnectionStatus(true);
+                    
+                    // Register with our connection ID
+                    if (myConnectionId) {
+                        signalingSocket.send(JSON.stringify({
+                            type: 'register',
+                            id: myConnectionId
+                        }));
+                    }
+                };
+                
+                signalingSocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleSignalingMessage(data);
+                };
+                
+                signalingSocket.onerror = (error) => {
+                    log('error', `WebSocket error: ${error}`);
+                };
+                
+                signalingSocket.onclose = () => {
+                    log('warning', 'Disconnected from signaling server');
+                    updateConnectionStatus(false);
+                };
+            } catch (e) {
+                log('error', `Failed to connect: ${e.message}`);
+            }
+        }
+
+        // Test signaling connection
+        function testSignaling() {
+            const url = document.getElementById('signalingUrl').value;
+            log('info', `Testing connection to: ${url}`);
+            
+            const testSocket = new WebSocket(url);
+            testSocket.onopen = () => {
+                log('success', 'Connection test successful!');
+                testSocket.close();
+            };
+            testSocket.onerror = () => {
+                log('error', 'Connection test failed');
+            };
+        }
+
+        // Handle signaling messages
+        function handleSignalingMessage(data) {
+            log('info', `Received: ${data.type}`);
+            
+            switch (data.type) {
+                case 'offer':
+                    handleOffer(data);
+                    break;
+                case 'answer':
+                    handleAnswer(data);
+                    break;
+                case 'ice-candidate':
+                    handleIceCandidate(data);
+                    break;
+                case 'registered':
+                    log('success', `Registered with ID: ${data.id}`);
+                    break;
+            }
+        }
+
+        // Connect to peer
+        async function connectToPeer() {
+            const remoteId = document.getElementById('remoteId').value.toUpperCase();
+            if (!remoteId || remoteId.length !== 6) {
+                log('error', 'Please enter a valid 6-digit connection ID');
+                return;
+            }
+            
+            log('info', `Connecting to peer: ${remoteId}`);
+            sendToRust({ type: 'connect', connectionId: remoteId });
+            
+            // Create peer connection
+            await createPeerConnection();
+            
+            // Create and send offer
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            
+            if (signalingSocket && signalingSocket.readyState === WebSocket.OPEN) {
+                signalingSocket.send(JSON.stringify({
+                    type: 'offer',
+                    target: remoteId,
+                    offer: offer
+                }));
+            }
+            
+            document.getElementById('connectBtn').classList.add('hidden');
+            document.getElementById('disconnectBtn').classList.remove('hidden');
+        }
+
+        // Disconnect
+        function disconnect() {
+            log('info', 'Disconnecting...');
+            sendToRust({ type: 'disconnect' });
+            
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            document.getElementById('connectBtn').classList.remove('hidden');
+            document.getElementById('disconnectBtn').classList.add('hidden');
+            updateConnectionStatus(false);
+        }
+
+        // Create WebRTC peer connection
+        async function createPeerConnection() {
+            const stunServer = document.getElementById('stunServer').value;
+            
+            const config = {
+                iceServers: [
+                    { urls: stunServer }
+                ]
+            };
+            
+            const turnServer = document.getElementById('turnServer').value;
+            if (turnServer) {
+                config.iceServers.push({
+                    urls: turnServer,
+                    username: 'genxlink',
+                    credential: 'genxlink'
+                });
+            }
+            
+            peerConnection = new RTCPeerConnection(config);
+            
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && signalingSocket) {
+                    signalingSocket.send(JSON.stringify({
+                        type: 'ice-candidate',
+                        candidate: event.candidate
+                    }));
+                }
+            };
+            
+            peerConnection.ontrack = (event) => {
+                log('success', 'Received remote stream');
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = event.streams[0];
+                document.getElementById('remotePlaceholder').classList.add('hidden');
+            };
+            
+            peerConnection.onconnectionstatechange = () => {
+                log('info', `Connection state: ${peerConnection.connectionState}`);
+                document.getElementById('connectionType').value = peerConnection.connectionState;
+                
+                if (peerConnection.connectionState === 'connected') {
+                    updateConnectionStatus(true);
+                    startStatsCollection();
+                }
+            };
+            
+            // Add local stream if available
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+            }
+            
+            log('info', 'Peer connection created');
+        }
+
+        // Handle incoming offer
+        async function handleOffer(data) {
+            await createPeerConnection();
+            await peerConnection.setRemoteDescription(data.offer);
+            
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            
+            if (signalingSocket) {
+                signalingSocket.send(JSON.stringify({
+                    type: 'answer',
+                    target: data.from,
+                    answer: answer
+                }));
+            }
+        }
+
+        // Handle incoming answer
+        async function handleAnswer(data) {
+            await peerConnection.setRemoteDescription(data.answer);
+        }
+
+        // Handle ICE candidate
+        async function handleIceCandidate(data) {
+            if (peerConnection) {
+                await peerConnection.addIceCandidate(data.candidate);
+            }
+        }
+
+        // Start screen share
+        async function startScreenShare() {
+            try {
+                const resolution = document.getElementById('resolution').value;
+                const framerate = document.getElementById('framerate').value;
+                
+                const constraints = {
+                    video: {
+                        width: { ideal: resolution === '2160' ? 3840 : resolution === '1440' ? 2560 : resolution === '1080' ? 1920 : 1280 },
+                        height: { ideal: parseInt(resolution) },
+                        frameRate: { ideal: parseInt(framerate) }
+                    },
+                    audio: document.getElementById('audioEnabled').checked
+                };
+                
+                localStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                document.getElementById('localPlaceholder').classList.add('hidden');
+                
+                document.getElementById('startShareBtn').classList.add('hidden');
+                document.getElementById('stopShareBtn').classList.remove('hidden');
+                
+                log('success', 'Screen sharing started');
+                sendToRust({ type: 'startScreenShare' });
+                
+                // Add tracks to peer connection if exists
+                if (peerConnection) {
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                }
+                
+                // Handle stream end
+                localStream.getVideoTracks()[0].onended = () => {
+                    stopScreenShare();
+                };
+            } catch (e) {
+                log('error', `Failed to start screen share: ${e.message}`);
+            }
+        }
+
+        // Stop screen share
+        function stopScreenShare() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('localPlaceholder').classList.remove('hidden');
+            document.getElementById('startShareBtn').classList.remove('hidden');
+            document.getElementById('stopShareBtn').classList.add('hidden');
+            
+            log('info', 'Screen sharing stopped');
+            sendToRust({ type: 'stopScreenShare' });
+        }
+
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            const remoteVideo = document.getElementById('remoteVideo');
+            if (remoteVideo.requestFullscreen) {
+                remoteVideo.requestFullscreen();
+            }
+        }
+
+        // Take screenshot
+        function takeScreenshot() {
+            const remoteVideo = document.getElementById('remoteVideo');
+            const canvas = document.createElement('canvas');
+            canvas.width = remoteVideo.videoWidth;
+            canvas.height = remoteVideo.videoHeight;
+            canvas.getContext('2d').drawImage(remoteVideo, 0, 0);
+            
+            const link = document.createElement('a');
+            link.download = `screenshot-${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            log('success', 'Screenshot saved');
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = 'Connected';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        // Start collecting stats
+        function startStatsCollection() {
+            setInterval(async () => {
+                if (peerConnection) {
+                    const stats = await peerConnection.getStats();
+                    stats.forEach(report => {
+                        if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+                            document.getElementById('statLatency').textContent = 
+                                Math.round(report.currentRoundTripTime * 1000) || '--';
+                        }
+                        if (report.type === 'outbound-rtp' && report.kind === 'video') {
+                            const bitrate = Math.round((report.bytesSent * 8) / 1000);
+                            document.getElementById('statBitrate').textContent = bitrate || '--';
+                        }
+                    });
+                }
+            }, 1000);
+        }
+
+        // Enumerate devices
+        async function enumerateDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const micSelect = document.getElementById('micSelect');
+                const speakerSelect = document.getElementById('speakerSelect');
+                
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.textContent = device.label || `${device.kind} ${device.deviceId.slice(0, 8)}`;
+                    
+                    if (device.kind === 'audioinput') {
+                        micSelect.appendChild(option);
+                    } else if (device.kind === 'audiooutput') {
+                        speakerSelect.appendChild(option);
+                    }
+                });
+            } catch (e) {
+                log('warning', 'Could not enumerate devices');
+            }
+        }
+
+        // Save settings
+        function saveSettings() {
+            const settings = {
+                resolution: document.getElementById('resolution').value,
+                framerate: document.getElementById('framerate').value,
+                bitrate: document.getElementById('bitrate').value,
+                e2eEncryption: document.getElementById('e2eEncryption').checked,
+                hardwareAccel: document.getElementById('hardwareAccel').checked
+            };
+            localStorage.setItem('genxlink-settings', JSON.stringify(settings));
+            log('success', 'Settings saved');
+        }
+
+        // Reset settings
+        function resetSettings() {
+            localStorage.removeItem('genxlink-settings');
+            location.reload();
+        }
+
+        // Logging
+        function log(type, message) {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="time">[${time}]</span>${message}`;
+            
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Clear logs
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '';
+        }
+
+        // Export logs
+        function exportLogs() {
+            const logs = document.getElementById('logContainer').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.download = `genxlink-logs-${Date.now()}.txt`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generateConnectionId();
+            enumerateDevices();
+            log('info', 'GenXLink WebView Test initialized');
+        });
+    </script>
+</body>
+</html>"#.to_string()
+}
