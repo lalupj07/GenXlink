@@ -68,6 +68,12 @@ GenXLink/
 4. **Licensing** - Activation system, premium features
 5. **Final App** - Branding, installers, optimization
 
+## 🌐 Live Demo
+
+**Try GenXLink WebRTC Test Interface:** [https://genxlink-webtest.netlify.app](https://genxlink-webtest.netlify.app)
+
+Test WebRTC connections, screen sharing, and peer-to-peer communication directly in your browser!
+
 ## 🚀 Getting Started
 
 ### Quick Start (5 minutes)
