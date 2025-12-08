@@ -3566,6 +3566,7 @@ dependencies = [
  "lazy_static",
  "notify",
  "open",
+ "rand 0.8.5",
  "serde",
  "serde_json",
  "tokio",

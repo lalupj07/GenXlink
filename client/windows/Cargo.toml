@@ -7,7 +7,7 @@ license.workspace = true
 
 [[bin]]
 name = "genxlink"
-path = "src/ui_demo.rs"
+path = "src/main_app.rs"
 
 [dependencies]
 tokio = { workspace = true }
@@ -20,6 +20,7 @@ config = { workspace = true }
 dotenv = { workspace = true }
 env_logger = "0.10"
 futures = { workspace = true }
+rand = "0.8"
 
 # GenXLink dependencies
 genxlink-client-core = { path = "../core" }
