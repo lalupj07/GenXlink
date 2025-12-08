@@ -135,7 +135,7 @@ impl ToastManager {
         let spacing = 10.0;
         let margin = 20.0;
 
-        egui::Area::new("toast_container")
+        egui::Area::new(egui::Id::new("toast_container"))
             .fixed_pos(Pos2::new(
                 screen_rect.max.x - toast_width - margin,
                 margin,

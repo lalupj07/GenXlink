@@ -167,6 +167,7 @@ impl AccessControlPanel {
                 }
                 true
             })
+            .cloned()
             .collect();
 
         if sessions.is_empty() {
@@ -336,7 +337,7 @@ impl AccessControlPanel {
                                 let duration = Duration::from_secs(self.permission_request.duration_minutes * 60);
                                 let _ = self.manager.grant_temporary_permission(
                                     &self.permission_request.session_id,
-                                    permission,
+                                    permission.clone(),
                                     duration,
                                     "admin".to_string(),
                                     self.permission_request.reason.clone(),

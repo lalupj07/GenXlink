@@ -2,9 +2,7 @@ use anyhow::Result;
 use eframe::egui;
 use std::sync::Arc;
 
-mod ui;
-
-use ui::{
+use crate::ui::{
     main_window::{MainWindow, AppTheme},
     settings_panel::{SettingsPanel, AppSettings, GeneralSettings, UISettings},
     premium_features::PremiumFeaturesPanel,
