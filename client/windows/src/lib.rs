@@ -1,4 +1,2 @@
-pub mod simple_main;
+// pub mod simple_main; // Deprecated - using ui_demo.rs instead
 pub mod ui;
-
-pub use simple_main::*;

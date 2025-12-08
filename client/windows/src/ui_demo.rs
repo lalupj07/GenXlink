@@ -7,7 +7,7 @@
 //! - Window opacity control
 //! - Premium pricing plans
 
-use eframe::{egui, eframe};
+use eframe::egui;
 use anyhow::Result;
 
 #[derive(Default)]
@@ -25,11 +25,7 @@ pub struct GenXLinkUIDemo {
 }
 
 impl eframe::App for GenXLinkUIDemo {
-    fn name(&self) -> &str {
-        "GenXLink Remote Desktop - UI Demo"
-    }
-
-    fn update(&mut self, ctx: &egui::Context, _frame: &eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Configure dark theme
         let mut visuals = egui::Visuals::dark();
         visuals.window_rounding = 8.0.into();
@@ -341,7 +337,7 @@ impl GenXLinkUIDemo {
                     egui::Color32::from_rgb(40, 40, 40)
                 },
                 stroke: egui::Stroke::new(1.0, color),
-                corner_radius: 8.0.into(),
+                rounding: 8.0.into(),
                 ..Default::default()
             };
             
@@ -381,7 +377,7 @@ impl GenXLinkUIDemo {
                     
                     for feature in features {
                         ui.horizontal(|ui| {
-                            ui.label(feature);
+                            ui.label(*feature);
                         });
                     }
                     
@@ -390,7 +386,7 @@ impl GenXLinkUIDemo {
                     // Limitations
                     for limitation in limitations {
                         ui.horizontal(|ui| {
-                            ui.colored_label(egui::Color32::GRAY, limitation);
+                            ui.colored_label(egui::Color32::GRAY, *limitation);
                         });
                     }
                     
@@ -403,10 +399,9 @@ impl GenXLinkUIDemo {
                     
                     // CTA button
                     if is_current {
-                        ui.add_enabled(false, egui::Button::new("Current Plan")
-                            .fill(color));
+                        ui.add_enabled(false, egui::Button::new("Current Plan"));
                     } else {
-                        if ui.button("Upgrade Now").fill(color).clicked() {
+                        if ui.add(egui::Button::new("Upgrade Now").fill(color)).clicked() {
                             // Handle upgrade
                         }
                     }
@@ -421,34 +416,33 @@ impl GenXLinkUIDemo {
 fn main() -> Result<()> {
     env_logger::init(); // Initialize logger
     
-    let app = GenXLinkUIDemo {
-        selected_language: "English".to_string(),
-        selected_theme: "Dark".to_string(),
-        font_size: 14.0,
-        window_opacity: 1.0,
-        show_notifications: true,
-        notification_sound: true,
-        auto_start: false,
-        minimize_to_tray: true,
-        ..Default::default()
-    };
-    
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(1200.0, 800.0)),
-        decorated: true,
-        resizable: true,
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1200.0, 800.0])
+            .with_decorations(true)
+            .with_resizable(true)
+            .with_title("GenXLink Remote Desktop"),
         ..Default::default()
     };
 
     eframe::run_native(
-        "GenXLink Remote Desktop - UI Demo",
+        "GenXLink Remote Desktop",
         native_options,
         Box::new(|cc| {
             // Configure egui
             cc.egui_ctx.set_visuals(egui::Visuals::dark());
-            Box::new(app)
+            
+            Ok(Box::new(GenXLinkUIDemo {
+                selected_language: "English".to_string(),
+                selected_theme: "Dark".to_string(),
+                font_size: 14.0,
+                window_opacity: 1.0,
+                show_notifications: true,
+                notification_sound: true,
+                auto_start: false,
+                minimize_to_tray: true,
+                ..Default::default()
+            }))
         }),
-    )?;
-
-    Ok(())
+    ).map_err(|e| anyhow::anyhow!("Failed to run app: {}", e))
 }

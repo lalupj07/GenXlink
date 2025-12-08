@@ -1,3 +1,10 @@
+// This file is deprecated - use ui_demo.rs instead
+// The binary is now built from ui_demo.rs
+// This file is kept for reference only and is not compiled
+
+#![allow(dead_code, unused_imports, unused_variables)]
+
+/*
 use anyhow::Result;
 use eframe::egui;
 use std::sync::Arc;
@@ -17,6 +24,7 @@ pub struct GenXLinkApp {
     show_premium: bool,
     theme: AppTheme,
 }
+*/
 
 impl eframe::App for GenXLinkApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {

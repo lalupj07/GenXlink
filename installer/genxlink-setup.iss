@@ -5,7 +5,7 @@
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "GenXis Innovations"
 #define MyAppURL "https://genxlink-webtest.netlify.app"
-#define MyAppExeName "genxlink-windows.exe"
+#define MyAppExeName "genxlink.exe"
 
 [Setup]
 AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
