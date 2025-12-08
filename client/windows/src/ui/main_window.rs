@@ -4,10 +4,7 @@ use std::sync::Arc;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{info, error, warn, debug};
 use uuid::Uuid;
-use eframe::{
-    egui::{self, Context, CentralPanel, SidePanel, TopBottomPanel, ScrollArea, Grid, Vec2},
-    epi,
-};
+use eframe::egui::{self, Context, CentralPanel, SidePanel, TopBottomPanel, ScrollArea, Grid, Vec2};
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 
@@ -497,12 +494,8 @@ impl MainWindow {
     }
 }
 
-impl epi::App for MainWindow {
-    fn name(&self) -> &str {
-        "GenXLink Remote Desktop"
-    }
-
-    fn update(&mut self, ctx: &Context, _frame: &epi::Frame) {
+impl eframe::App for MainWindow {
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         // Apply theme
         if self.dark_mode {
             ctx.set_visuals(egui::Visuals::dark());
@@ -520,23 +513,5 @@ impl epi::App for MainWindow {
         
         // Show toast notifications
         self.toast_manager.show(ctx);
-    }
-
-    fn setup(&mut self, ctx: &Context) {
-        // Initialize the app
-        info!("Setting up main window");
-        
-        // Configure fonts
-        let mut fonts = egui::FontDefinitions::default();
-        fonts.font_data.insert(
-            "custom_font".to_owned(),
-            egui::FontData::from_static(include_bytes!("../../assets/fonts/Inter-Regular.ttf")),
-        );
-        
-        fonts.families.get_mut(&egui::FontFamily::Proportional)
-            .unwrap()
-            .insert(0, "custom_font".to_owned());
-        
-        ctx.set_fonts(fonts);
     }
 }

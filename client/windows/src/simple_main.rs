@@ -1,5 +1,5 @@
 use anyhow::Result;
-use eframe::{egui, epi};
+use eframe::egui;
 use std::sync::Arc;
 
 mod ui;
@@ -20,20 +20,8 @@ pub struct GenXLinkApp {
     theme: AppTheme,
 }
 
-impl epi::App for GenXLinkApp {
-    fn name(&self) -> &str {
-        "GenXLink Remote Desktop"
-    }
-
-    fn setup(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame, _storage: Option<&dyn epi::Storage>) {
-        // Configure dark theme
-        let mut visuals = egui::Visuals::dark();
-        visuals.window_rounding = 8.0.into();
-        visuals.button_frame = true;
-        ctx.set_visuals(visuals);
-    }
-
-    fn update(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame) {
+impl eframe::App for GenXLinkApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.heading("🌐 GenXLink Remote Desktop");
@@ -88,20 +76,17 @@ impl epi::App for GenXLinkApp {
 }
 
 fn main() -> Result<()> {
-    let app = GenXLinkApp::default();
-    
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(1200.0, 800.0)),
-        decorated: true,
-        resizable: true,
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1200.0, 800.0])
+            .with_decorations(true)
+            .with_resizable(true),
         ..Default::default()
     };
 
     eframe::run_native(
         "GenXLink Remote Desktop",
         native_options,
-        Box::new(|_cc| Box::new(app)),
-    )?;
-
-    Ok(())
+        Box::new(|_cc| Ok(Box::<GenXLinkApp>::default())),
+    ).map_err(|e| anyhow::anyhow!("Failed to run app: {}", e))
 }
