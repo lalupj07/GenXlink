@@ -7,7 +7,7 @@ license.workspace = true
 
 [[bin]]
 name = "genxlink"
-path = "src/main_app.rs"
+path = "src/full_app.rs"
 
 [dependencies]
 tokio = { workspace = true }
