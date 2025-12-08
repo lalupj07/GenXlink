@@ -58,3 +58,6 @@ temp/
 # License keys (security)
 licenses/
 keys/private/
+
+# Local Netlify folder
+.netlify

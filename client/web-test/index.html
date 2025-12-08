@@ -2,9 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>GenXLink WebRTC Test</title>
     <style>
+        /* DPI Scaling Fix for High-DPI displays (150%+) */
+        @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+            html {
+                font-size: 14px;
+            }
+        }
+        
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            html {
+                font-size: 13px;
+            }
+        }
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -167,7 +181,18 @@
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            min-height: 44px;
+            min-width: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            position: relative;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
         }
 
         .btn-primary {
@@ -179,14 +204,34 @@
             background: var(--primary-dark);
         }
 
+        .btn-primary:active {
+            background: #4338ca;
+        }
+
         .btn-success {
             background: var(--success);
             color: white;
         }
 
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .btn-success:active {
+            background: #15803d;
+        }
+
         .btn-danger {
             background: var(--danger);
             color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-danger:active {
+            background: #b91c1c;
         }
 
         .btn-outline {
@@ -199,9 +244,105 @@
             background: var(--bg-input);
         }
 
+        .btn-outline:active {
+            background: var(--border);
+        }
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
+        .toast.info { background: var(--primary); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Modal for permissions */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal h3 {
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .modal .btn-group {
+            justify-content: center;
         }
 
         .btn-group {
@@ -400,9 +541,126 @@
         .input-row .input-group {
             flex: 1;
         }
+
+        /* File Transfer Styles */
+        .file-drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .file-drop-content .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .file-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .file-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-item .file-size {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-left: 12px;
+        }
+
+        .file-item .remove-file {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 16px;
+        }
+
+        .transfer-progress {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-input);
+            border-radius: 8px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .transfer-speed {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        /* Responsive fixes for high DPI */
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-height: 800px) {
+            .container {
+                padding: 12px;
+            }
+            .card {
+                padding: 16px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="toast-container" id="toastContainer"></div>
     <div class="container">
         <header>
             <div class="logo">
@@ -541,25 +799,54 @@
                     </div>
                 </div>
 
-                <div class="card full-width">
+                <div class="card">
                     <h2>🎤 Audio Settings</h2>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Microphone</label>
-                            <select id="micSelect">
-                                <option value="">Select microphone...</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Speaker</label>
-                            <select id="speakerSelect">
-                                <option value="">Select speaker...</option>
-                            </select>
-                        </div>
+                    <div class="input-group">
+                        <label>Microphone</label>
+                        <select id="micSelect">
+                            <option value="">Select microphone...</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Speaker</label>
+                        <select id="speakerSelect">
+                            <option value="">Select speaker...</option>
+                        </select>
                     </div>
                     <div class="toggle-switch">
                         <input type="checkbox" id="audioEnabled">
                         <label for="audioEnabled">Enable Audio</label>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📁 File Transfer</h2>
+                    <div class="file-drop-zone" id="fileDropZone">
+                        <div class="file-drop-content">
+                            <div class="icon">📂</div>
+                            <div>Drag & drop files here or click to browse</div>
+                            <div class="file-hint">Max 100MB per file</div>
+                        </div>
+                        <input type="file" id="fileInput" multiple hidden>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+                    <div class="btn-group" style="margin-top: 12px;">
+                        <button class="btn btn-primary" onclick="selectFiles()" id="selectFilesBtn">
+                            📎 Select Files
+                        </button>
+                        <button class="btn btn-success" onclick="sendFiles()" id="sendFilesBtn" disabled>
+                            📤 Send Files
+                        </button>
+                    </div>
+                    <div class="transfer-progress hidden" id="transferProgress">
+                        <div class="progress-info">
+                            <span id="transferFileName">file.txt</span>
+                            <span id="transferPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="transfer-speed" id="transferSpeed">0 KB/s</div>
                     </div>
                 </div>
             </div>
@@ -673,6 +960,41 @@
         let peerConnection = null;
         let localStream = null;
         let signalingSocket = null;
+        let dataChannel = null;
+        let selectedFiles = [];
+        let fileChunks = [];
+        let receivingFile = null;
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            toast.innerHTML = `${icons[type] || ''} ${message}`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Button loading state
+        function setButtonLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                if (loading) {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                } else {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            }
+        }
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -861,8 +1183,21 @@
                 document.getElementById('connectionType').value = peerConnection.connectionState;
                 
                 if (peerConnection.connectionState === 'connected') {
+                    showToast('Peer connected successfully!', 'success');
                     startStatsCollection();
+                    updateFileList(); // Enable file transfer button
+                } else if (peerConnection.connectionState === 'disconnected') {
+                    showToast('Peer disconnected', 'warning');
+                } else if (peerConnection.connectionState === 'failed') {
+                    showToast('Connection failed', 'error');
                 }
+            };
+            
+            // Handle incoming data channels (for file transfer)
+            peerConnection.ondatachannel = (event) => {
+                log('info', 'Received data channel');
+                dataChannel = event.channel;
+                setupDataChannelReceiver(dataChannel);
             };
             
             // Add local stream if available
@@ -906,7 +1241,19 @@
 
         // Start screen share
         async function startScreenShare() {
+            const btn = document.getElementById('startShareBtn');
+            
+            // Check if getDisplayMedia is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                showToast('Screen sharing is not supported in this browser', 'error');
+                log('error', 'getDisplayMedia not supported');
+                return;
+            }
+            
             try {
+                setButtonLoading('startShareBtn', true);
+                showToast('Requesting screen access...', 'info', 2000);
+                
                 const resolution = document.getElementById('resolution').value;
                 const framerate = document.getElementById('framerate').value;
                 
@@ -914,7 +1261,8 @@
                     video: {
                         width: { ideal: resolution === '2160' ? 3840 : resolution === '1440' ? 2560 : resolution === '1080' ? 1920 : 1280 },
                         height: { ideal: parseInt(resolution) },
-                        frameRate: { ideal: parseInt(framerate) }
+                        frameRate: { ideal: parseInt(framerate) },
+                        cursor: 'always'
                     },
                     audio: document.getElementById('audioEnabled').checked
                 };
@@ -928,21 +1276,41 @@
                 document.getElementById('startShareBtn').classList.add('hidden');
                 document.getElementById('stopShareBtn').classList.remove('hidden');
                 
+                showToast('Screen sharing started successfully!', 'success');
                 log('success', 'Screen sharing started');
                 
                 // Add tracks to peer connection if exists
-                if (peerConnection) {
+                if (peerConnection && peerConnection.connectionState === 'connected') {
                     localStream.getTracks().forEach(track => {
                         peerConnection.addTrack(track, localStream);
                     });
+                    log('info', 'Added screen tracks to peer connection');
                 }
                 
-                // Handle stream end
+                // Handle stream end (user clicks browser stop button)
                 localStream.getVideoTracks()[0].onended = () => {
                     stopScreenShare();
+                    showToast('Screen sharing stopped', 'info');
                 };
+                
             } catch (e) {
-                log('error', `Failed to start screen share: ${e.message}`);
+                setButtonLoading('startShareBtn', false);
+                
+                if (e.name === 'NotAllowedError') {
+                    showToast('Screen sharing was cancelled or denied', 'warning');
+                    log('warning', 'User cancelled screen share');
+                } else if (e.name === 'NotFoundError') {
+                    showToast('No screen available to share', 'error');
+                    log('error', 'No screen found');
+                } else if (e.name === 'NotReadableError') {
+                    showToast('Could not access screen - it may be in use', 'error');
+                    log('error', 'Screen not readable');
+                } else {
+                    showToast(`Screen share failed: ${e.message}`, 'error');
+                    log('error', `Failed to start screen share: ${e.name} - ${e.message}`);
+                }
+            } finally {
+                setButtonLoading('startShareBtn', false);
             }
         }
 
@@ -1092,12 +1460,264 @@
             link.click();
         }
 
+        // ==================== FILE TRANSFER ====================
+        
+        // File size formatter
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Select files
+        function selectFiles() {
+            document.getElementById('fileInput').click();
+        }
+
+        // Handle file selection
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileInput = document.getElementById('fileInput');
+            const dropZone = document.getElementById('fileDropZone');
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    handleFileSelection(e.target.files);
+                });
+            }
+            
+            if (dropZone) {
+                dropZone.addEventListener('click', () => fileInput.click());
+                
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                });
+                
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('dragover');
+                });
+                
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    handleFileSelection(e.dataTransfer.files);
+                });
+            }
+        });
+
+        function handleFileSelection(files) {
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            const fileList = document.getElementById('fileList');
+            
+            for (const file of files) {
+                if (file.size > maxSize) {
+                    showToast(`${file.name} exceeds 100MB limit`, 'error');
+                    continue;
+                }
+                
+                if (!selectedFiles.find(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            }
+            
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const sendBtn = document.getElementById('sendFilesBtn');
+            
+            fileList.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-item">
+                    <span class="file-name">📄 ${file.name}</span>
+                    <span class="file-size">${formatFileSize(file.size)}</span>
+                    <button class="remove-file" onclick="removeFile(${index})">✕</button>
+                </div>
+            `).join('');
+            
+            sendBtn.disabled = selectedFiles.length === 0 || !peerConnection || peerConnection.connectionState !== 'connected';
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        // Send files via WebRTC data channel
+        async function sendFiles() {
+            if (!peerConnection || peerConnection.connectionState !== 'connected') {
+                showToast('Please connect to a peer first', 'warning');
+                return;
+            }
+            
+            if (selectedFiles.length === 0) {
+                showToast('No files selected', 'warning');
+                return;
+            }
+            
+            // Create data channel if not exists
+            if (!dataChannel || dataChannel.readyState !== 'open') {
+                dataChannel = peerConnection.createDataChannel('fileTransfer', {
+                    ordered: true
+                });
+                
+                dataChannel.onopen = () => {
+                    log('info', 'Data channel opened');
+                    startFileSending();
+                };
+                
+                dataChannel.onerror = (e) => {
+                    showToast('File transfer error', 'error');
+                    log('error', `Data channel error: ${e}`);
+                };
+            } else {
+                startFileSending();
+            }
+        }
+
+        async function startFileSending() {
+            const progressDiv = document.getElementById('transferProgress');
+            const progressFill = document.getElementById('progressFill');
+            const fileName = document.getElementById('transferFileName');
+            const percentText = document.getElementById('transferPercent');
+            const speedText = document.getElementById('transferSpeed');
+            
+            progressDiv.classList.remove('hidden');
+            setButtonLoading('sendFilesBtn', true);
+            
+            for (const file of selectedFiles) {
+                fileName.textContent = file.name;
+                
+                // Send file metadata first
+                dataChannel.send(JSON.stringify({
+                    type: 'file-start',
+                    name: file.name,
+                    size: file.size,
+                    mimeType: file.type
+                }));
+                
+                const chunkSize = 16384; // 16KB chunks
+                const totalChunks = Math.ceil(file.size / chunkSize);
+                let sentChunks = 0;
+                const startTime = Date.now();
+                
+                const reader = new FileReader();
+                let offset = 0;
+                
+                const readNextChunk = () => {
+                    const slice = file.slice(offset, offset + chunkSize);
+                    reader.readAsArrayBuffer(slice);
+                };
+                
+                reader.onload = (e) => {
+                    if (dataChannel.bufferedAmount > 1024 * 1024) {
+                        // Wait for buffer to drain
+                        setTimeout(() => reader.onload(e), 50);
+                        return;
+                    }
+                    
+                    dataChannel.send(e.target.result);
+                    sentChunks++;
+                    offset += chunkSize;
+                    
+                    const progress = Math.min((sentChunks / totalChunks) * 100, 100);
+                    progressFill.style.width = progress + '%';
+                    percentText.textContent = Math.round(progress) + '%';
+                    
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const speed = (offset / 1024) / elapsed;
+                    speedText.textContent = `${speed.toFixed(1)} KB/s`;
+                    
+                    if (offset < file.size) {
+                        readNextChunk();
+                    } else {
+                        // File complete
+                        dataChannel.send(JSON.stringify({ type: 'file-end', name: file.name }));
+                        log('success', `Sent: ${file.name}`);
+                    }
+                };
+                
+                readNextChunk();
+                
+                // Wait for file to complete
+                await new Promise(resolve => {
+                    const checkComplete = setInterval(() => {
+                        if (offset >= file.size) {
+                            clearInterval(checkComplete);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }
+            
+            showToast(`Sent ${selectedFiles.length} file(s) successfully!`, 'success');
+            selectedFiles = [];
+            updateFileList();
+            setButtonLoading('sendFilesBtn', false);
+            
+            setTimeout(() => {
+                progressDiv.classList.add('hidden');
+                progressFill.style.width = '0%';
+            }, 2000);
+        }
+
+        // Handle incoming files
+        function setupDataChannelReceiver(channel) {
+            channel.onmessage = (event) => {
+                if (typeof event.data === 'string') {
+                    const msg = JSON.parse(event.data);
+                    
+                    if (msg.type === 'file-start') {
+                        receivingFile = {
+                            name: msg.name,
+                            size: msg.size,
+                            mimeType: msg.mimeType,
+                            chunks: []
+                        };
+                        showToast(`Receiving: ${msg.name}`, 'info');
+                        log('info', `Receiving file: ${msg.name} (${formatFileSize(msg.size)})`);
+                    } else if (msg.type === 'file-end') {
+                        if (receivingFile) {
+                            const blob = new Blob(receivingFile.chunks, { type: receivingFile.mimeType });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = receivingFile.name;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            
+                            showToast(`Received: ${receivingFile.name}`, 'success');
+                            log('success', `File received: ${receivingFile.name}`);
+                            receivingFile = null;
+                        }
+                    }
+                } else {
+                    // Binary data (file chunk)
+                    if (receivingFile) {
+                        receivingFile.chunks.push(event.data);
+                    }
+                }
+            };
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             generateConnectionId();
             enumerateDevices();
             log('info', 'GenXLink WebRTC Test initialized');
             log('info', 'Open this page in two browser tabs to test peer connections');
+            
+            // Check for required APIs
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                log('warning', 'Screen sharing may not be supported in this browser');
+            }
+            
+            if (!window.RTCPeerConnection) {
+                log('error', 'WebRTC is not supported in this browser');
+                showToast('WebRTC not supported - please use a modern browser', 'error');
+            }
         });
     </script>
 </body>

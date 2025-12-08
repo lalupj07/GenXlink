@@ -21,7 +21,7 @@ https://github.com/lalupj07/GenXlink/blob/main/PRIVACY_POLICY.md
 https://github.com/lalupj07/GenXlink
 
 ### Support Contact
-genxisinnovations@gmail.com
+genxisinnovation@outlook.com
 
 ---
 
