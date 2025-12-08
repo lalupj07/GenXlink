@@ -20,6 +20,7 @@ use crate::ui::{
     file_transfer_panel::FileTransferPanel,
     chat_panel::ChatPanel,
     notifications::NotificationManager,
+    toast_notification::ToastManager,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,6 +91,7 @@ pub struct MainWindow {
     file_transfer_panel: Arc<FileTransferPanel>,
     chat_panel: Arc<ChatPanel>,
     notification_manager: Arc<NotificationManager>,
+    toast_manager: ToastManager,
     
     // State
     connection_state: Arc<RwLock<ConnectionState>>,
@@ -156,6 +158,7 @@ impl MainWindow {
             file_transfer_panel,
             chat_panel,
             notification_manager,
+            toast_manager: ToastManager::new(),
             connection_state: Arc::new(RwLock::new(ConnectionState {
                 is_connected: false,
                 session_id: None,
@@ -450,7 +453,7 @@ impl MainWindow {
         });
     }
 
-    fn start_screen_share(&self) {
+    fn start_screen_share(&mut self) {
         let config = ScreenShareConfig {
             width: 1920,
             height: 1080,
@@ -461,7 +464,13 @@ impl MainWindow {
         };
         
         info!("Starting screen share with config: {:?}", config);
+        self.toast_manager.info("Starting screen share...");
+        
         // Implementation would call media_manager.start_screen_share()
+        // On success:
+        // self.toast_manager.success("Screen sharing started successfully!");
+        // On error:
+        // self.toast_manager.error("Failed to start screen share");
     }
 
     fn start_audio_share(&self) {
@@ -508,6 +517,9 @@ impl epi::App for MainWindow {
         
         // Handle notifications
         self.notification_manager.update(ctx, &self.theme);
+        
+        // Show toast notifications
+        self.toast_manager.show(ctx);
     }
 
     fn setup(&mut self, ctx: &Context) {
