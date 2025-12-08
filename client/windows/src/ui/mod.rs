@@ -2,6 +2,7 @@ pub mod app;
 pub mod devices;
 pub mod settings;
 pub mod notifications;
+pub mod toast_notification;
 pub mod connection_dialog;
 pub mod remote_control_panel;
 pub mod file_transfer_panel;
@@ -16,4 +17,5 @@ pub mod streaming_panel;
 
 pub use app::GenXLinkApp;
 pub use notifications::NotificationManager;
+pub use toast_notification::{ToastManager, Toast, ToastType};
 pub use connection_dialog::DialogResult;
